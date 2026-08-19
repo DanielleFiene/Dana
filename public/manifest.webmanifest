@@ -1,0 +1,10 @@
+{
+  "name": "DANA 7 días",
+  "short_name": "DANA",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#101613",
+  "theme_color": "#101613",
+  "lang": "es",
+  "description": "Riesgo DANA e inundación relámpago a 7 días para España. No oficial."
+}

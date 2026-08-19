@@ -1,0 +1,223 @@
+import type { Lang } from "@/types/lang";
+import type { RiskLevel } from "@/types/risk";
+import type { FactorKey } from "@/types/weather";
+
+/** What the bar is, from when it counts, and what it belongs with. No advice. */
+export const FACTOR_SCALE: Record<Lang, string> = {
+  ca: "Cada barra és 0–100 per a l’hora triada. El ? diu què és, a partir de quan compta, i amb què es llegeix.",
+  es: "Cada barra es 0–100 para la hora elegida. El ? dice qué es, a partir de cuándo cuenta, y con qué se lee.",
+  en: "Each bar is 0–100 for the selected hour. The ? says what it is, from when it counts, and what to read it with.",
+  de: "Jede Leiste ist 0–100 für die gewählte Stunde. Das ? sagt, was sie ist, ab wann sie zählt, und womit man sie liest.",
+  nl: "Elke balk is 0–100 voor het gekozen uur. Het ? zegt wat het is, vanaf wanneer het telt, en waar het bij hoort.",
+  cs: "Každý pruh je 0–100 pro zvolenou hodinu. ? říká, co to je, od kdy to počítá, a s čím se to čte.",
+};
+
+export const SHOCK_HELP: Record<Lang, string> = {
+  ca: "Diferència terra menys ~5.500 m. Uns 36 °C és normal. A partir de ~52 °C l’aire pot pujar de pressa si hi ha humitat. De nit o amb calor sense nucli fred queda a 0.",
+  es: "Diferencia suelo menos ~5.500 m. Unos 36 °C es normal. A partir de ~52 °C el aire puede subir deprisa si hay humedad. De noche o con calor sin núcleo frío queda en 0.",
+  en: "Ground minus ~5,500 m. About 36 °C is normal. From ~52 °C air can rise fast if it is moist. At night or in heat without a cold core it sits at 0.",
+  de: "Boden minus ~5.500 m. Rund 36 °C ist normal. Ab ~52 °C kann Luft schnell steigen, wenn Feuchte da ist. Nachts oder bei Hitze ohne Kaltkern bleibt 0.",
+  nl: "Verschil grond min ~5.500 m. Rond 36 °C is normaal. Vanaf ~52 °C kan lucht snel stijgen als er vocht bij is. ’s Nachts of bij hitte zonder koude kern blijft 0.",
+  cs: "Rozdíl zem minus ~5 500 m. Kolem 36 °C je běžné. Od ~52 °C může vzduch stoupat rychle, je-li vlhko. V noci nebo při vedru bez studeného jádra zůstane 0.",
+};
+
+export const METHOD: Record<Lang, { title: string; lead: string; formula: string; why: string }> = {
+  ca: {
+    title: "Com es calcula",
+    lead: "Cada hora té el seu color. Tira i mapa: el dia en conjunt. Un ruixat groc d’una hora no pinta el dia. Vermell = tempestes fortes. Porpra = risc de riuada.",
+    formula:
+      "Dos blocs. Gota freda: aire fred dalt, aigua en columna, mar calenta, vent de mar. Impacte: pluja 24 h i 48 h, intensitat i hores seguides. El nivell surt d’aquesta combinació, no d’una sola barra.",
+    why: "Les riuades mediterrànies sovint tenen CAPE només moderat. Els colors alts demanen pluja al model, no només calor o aire inestable. Els models globals sovint es queden curts: 40–50 mm sota una DANA en una zona de riuada ja és un senyal fort.",
+  },
+  es: {
+    title: "Cómo se calcula",
+    lead: "Cada hora tiene su color. Tira y mapa: el día en conjunto. Un chubasco amarillo de una hora no pinta el día. Rojo = tormentas fuertes. Púrpura = riesgo de riada.",
+    formula:
+      "Dos bloques. Gota fría: aire frío arriba, agua en columna, mar cálido, viento de mar. Impacto: lluvia 24 h y 48 h, intensidad y horas seguidas. El nivel sale de esa combinación, no de una sola barra.",
+    why: "Las riadas mediterráneas suelen tener CAPE solo moderado. Los colores altos piden lluvia en el modelo, no solo calor o aire inestable. Los modelos globales a menudo se quedan cortos: 40–50 mm bajo una DANA en una zona de riada ya es una señal fuerte.",
+  },
+  en: {
+    title: "How it is calculated",
+    lead: "Each hour has its own colour. Strip and map: the day as a whole. One yellow hour does not paint the day. Red = heavy storms. Purple = flood risk.",
+    formula:
+      "Two blocks. Cold air above: cold core, column water, warm sea, wind off the sea. Impact: 24 h and 48 h rain, how hard it falls, and how long it lasts. The level comes from that combination, not from one bar.",
+    why: "Mediterranean floods often have only moderate CAPE. The top colours need rain in the model, not heat or unstable air alone. Global models often under-do Mediterranean downpours: 40–50 mm under a DANA on a flood-prone area is already a strong signal.",
+  },
+  de: {
+    title: "Wie es berechnet wird",
+    lead: "Jede Stunde hat ihre Farbe. Leiste und Karte: der Tag insgesamt. Eine gelbe Stunde färbt den Tag nicht. Rot = starke Gewitter. Violett = Hochwasserrisiko.",
+    formula:
+      "Zwei Blöcke. Kaltluft oben: Kaltkern, Wassersäule, warmes Meer, Wind vom Meer. Wirkung: 24- und 48-h-Regen, Intensität und Dauer. Die Stufe kommt aus dem Zusammenspiel, nicht aus einer Leiste.",
+    why: "Mediterrane Hochwasser haben oft nur mäßiges CAPE. Die höchsten Farben brauchen Regen im Modell, nicht nur Hitze oder labile Luft. Globalmodelle unterschätzen Mittelmeerregen oft: 40–50 mm unter einer DANA in einem Risikogebiet ist bereits ein starkes Signal.",
+  },
+  nl: {
+    title: "Hoe het wordt berekend",
+    lead: "Elk uur heeft zijn eigen kleur. Strook en kaart tonen de dag als geheel. Eén geel uur kleurt de dag niet. Rood = zware buien. Paars = overstromingsrisico.",
+    formula:
+      "Twee blokken. Koude lucht boven: koude kern, kolomwater, warme zee, wind vanaf zee. Impact: 24- en 48-uursregen, hoe hard het valt en hoe lang het aanhoudt. Het niveau komt uit die samenhang, niet uit één balk.",
+    why: "Mediterrane overstromingen ontstaan vaak met maar matige CAPE. De hoogste kleuren vragen regen in het model, niet alleen hitte of onstabiele lucht. Wereldmodellen missen Mediterrane buien vaak: 40–50 mm onder een DANA in een overstromingsgebied is al een sterk signaal.",
+  },
+  cs: {
+    title: "Jak se to počítá",
+    lead: "Každá hodina má svou barvu. Pruh a mapa: den jako celek. Jedna žlutá hodina den nepřebarví. Červená = silné bouře. Fialová = riziko povodně.",
+    formula:
+      "Dva bloky. Studený vzduch nahoře: studené jádro, voda ve sloupci, teplé moře, vítr od moře. Dopad: déšť 24 h a 48 h, intenzita a trvání. Úroveň plyne z té souhry, ne z jednoho pruhu.",
+    why: "Středomořské povodně mají často jen mírné CAPE. Nejvyšší barvy chtějí déšť v modelu, ne jen teplo nebo nestabilní vzduch. Globální modely středomořské lijáky často podstřelují: 40–50 mm pod DANA v ohrožené oblasti je už silný signál.",
+  },
+};
+
+export const LEVEL_HINTS: Record<Lang, Record<RiskLevel, string>> = {
+  ca: {
+    0: "Temps tranquil, sense pluja forta.",
+    1: "Poden caure ruixats.",
+    2: "Aire fred a dalt. Amb humitat de mar, més endavant pot créixer pluja forta.",
+    3: "Pluja intensa o DANA activa.",
+    4: "Risc alt d’inundació ràpida.",
+  },
+  es: {
+    0: "Tiempo tranquilo, sin lluvia fuerte.",
+    1: "Puede haber chubascos.",
+    2: "Aire frío arriba. Con humedad de mar, más adelante puede crecer lluvia fuerte.",
+    3: "Lluvia intensa o DANA activa.",
+    4: "Riesgo alto de inundación rápida.",
+  },
+  en: {
+    0: "Quiet weather, no heavy rain.",
+    1: "Showers are possible.",
+    2: "Cold air high up. With moisture off the sea, heavy rain can build later.",
+    3: "Heavy rain or an active DANA.",
+    4: "High risk of rapid flooding.",
+  },
+  de: {
+    0: "Ruhiges Wetter, kein Starkregen.",
+    1: "Schauer möglich.",
+    2: "Kaltluft oben. Mit Feuchte vom Meer kann später Starkregen entstehen.",
+    3: "Starkregen oder aktive DANA.",
+    4: "Hohes Risiko rascher Überflutung.",
+  },
+  nl: {
+    0: "Rustig weer, geen zware regen.",
+    1: "Er kunnen buien vallen.",
+    2: "Hoog in de lucht is het koud. Met vocht vanaf zee kan later zware regen groeien.",
+    3: "Hevige regen of een actieve DANA.",
+    4: "Hoog risico op snelle overstroming.",
+  },
+  cs: {
+    0: "Klidné počasí, bez silného deště.",
+    1: "Mohou být přeháňky.",
+    2: "Vysoko je vzduch studený. S vlhkostí od moře může později narůst silný déšť.",
+    3: "Silný déšť nebo aktivní DANA.",
+    4: "Vysoké riziko rychlé záplavy.",
+  },
+};
+
+export const INDICATOR_HELP: Record<Lang, Record<FactorKey, string>> = {
+  ca: {
+    rain: "Pluja en 24 h. A partir de ~20 mm en una zona de riuada la barra puja. ~50 mm al model sota aire fred dalt ja és molt: els models globals sovint es queden curts al Mediterrani.",
+    setup: "Aire fred dalt, aigua en columna, mar calenta i vent de mar. A partir de ~50 aquest patró hi és. Es llegeix amb la pluja: sense mil·límetres és només l’aire.",
+    instability: "Com de fàcil puja l’aire (CAPE i lifted index). A partir de CAPE ~1000 o lifted sota 0 els ruixats creixen de pressa. Les riuades mediterrànies tenen sovint només 500–1500: pesen més els mm i si la pluja s’atura.",
+    persistence: "Quant de temps dura. A partir d’unes 4 hores seguides una rambla es pot omplir. Sis hores de pluja moderada és més que un ruixat curt.",
+    moisture: "Rosada a 2 m. A partir de ~16 °C l’aire pot alimentar pluja forta; 19–22 °C és molt humit. Les nits d’estiu sovint pugen aquí sense pluja.",
+    moisture850: "Humitat a ~1.500 m. A partir de ~70% RH l’aire de mar hi és. Baix = aire sec dalt: els ruixats costa que creixin.",
+    pwat: "Tota l’aigua de la columna (kg/m² ≈ mm). Combustible a partir de ~35 mm; ~42 mm és molt alt. Alt sense aire fred i pluja és només atmosfera humida.",
+    sst: "Mar. A partir de ~26 °C hi ha extra combustible; 28 °C+ és típic de DANA de tardor. A l’agost una mar calenta és normal.",
+    coldCore: "Temperatura a ~5.500 m. A partir d’uns −15 °C hi ha un nucli fred de veritat. 0 = càlid dalt, com en una onada de calor.",
+    geopotential: "Com de fonda és la baixa a 500 hPa. A partir de ~5680 m vaguada; ~5600 m o menys, baixa profunda. 0 = altes pressions.",
+    onshore: "Vent de mar a ~1.500 m. A partir de ~20 km/h empeny humitat a la costa. Es llegeix amb l’aire fred dalt; una brisa en un dia de calor és una altra cosa.",
+    cape: "Energia de tempesta (J/kg). A partir de ~1000 ruixats locals; 2500+ fort. En riuades mediterrànies aquesta barra sovint és mitjana: mira la pluja i si s’atura.",
+    gradient: "Terra menys ~5.500 m. Normal ~36 °C. A partir de ~52 °C l’aire pot pujar de pressa si hi ha humitat. De nit o amb calor sense nucli fred queda a 0.",
+    lifted: "Més negatiu = l’aire puja més fàcil. A partir de 0 inestable; −4 o menys, molt. Mateixa família que el CAPE.",
+    cin: "Tapa sobre els ruixats. Barra alta = la tapa és baixa, poden arrencar. Barra baixa = la tapa els frena. Es llegeix amb el CAPE.",
+    soil: "El sòl humit escorre abans. A partir de ~0,3 m³/m³ la pluja nova s’estanca abans. El sòl sec també pot omplir-se si plou prou fort.",
+  },
+  es: {
+    rain: "Lluvia en 24 h. A partir de ~20 mm en una zona de riada la barra sube. ~50 mm en el modelo bajo aire frío arriba ya es mucho: los modelos globales a menudo se quedan cortos en el Mediterráneo.",
+    setup: "Aire frío arriba, agua en columna, mar cálido y viento de mar. A partir de ~50 ese patrón está. Se lee con la lluvia: sin milímetros es solo el aire.",
+    instability: "Qué tan fácil sube el aire (CAPE e lifted index). A partir de CAPE ~1000 o lifted bajo 0 los chubascos crecen deprisa. Las riadas mediterráneas suelen tener solo 500–1500: pesan más los mm y si la lluvia se queda.",
+    persistence: "Cuánto dura. A partir de unas 4 horas seguidas una rambla se puede llenar. Seis horas de lluvia moderada es más que un chubasco corto.",
+    moisture: "Rocío a 2 m. A partir de ~16 °C el aire puede alimentar lluvia fuerte; 19–22 °C es muy húmedo. Las noches de verano a menudo suben aquí sin lluvia.",
+    moisture850: "Humedad a ~1.500 m. A partir de ~70% RH el aire de mar está. Bajo = aire seco arriba: cuesta que crezcan chubascos.",
+    pwat: "Toda el agua de la columna (kg/m² ≈ mm). Combustible a partir de ~35 mm; ~42 mm es muy alto. Alto sin aire frío y lluvia es solo atmósfera húmeda.",
+    sst: "Mar. A partir de ~26 °C hay extra combustible; 28 °C+ es típico de DANA de otoño. En agosto un mar cálido es normal.",
+    coldCore: "Temperatura a ~5.500 m. A partir de unos −15 °C hay un núcleo frío de verdad. 0 = cálido arriba, como en una ola de calor.",
+    geopotential: "Lo profunda que es la baja a 500 hPa. A partir de ~5680 m vaguada; ~5600 m o menos, baja profunda. 0 = altas presiones.",
+    onshore: "Viento de mar a ~1.500 m. A partir de ~20 km/h empuja humedad a la costa. Se lee con el aire frío arriba; una brisa en un día de calor es otra cosa.",
+    cape: "Energía de tormenta (J/kg). A partir de ~1000 chubascos locales; 2500+ fuerte. En riadas mediterráneas esta barra suele ser media: mira la lluvia y si se queda.",
+    gradient: "Suelo menos ~5.500 m. Normal ~36 °C. A partir de ~52 °C el aire puede subir deprisa si hay humedad. De noche o con calor sin núcleo frío queda en 0.",
+    lifted: "Más negativo = el aire sube más fácil. A partir de 0 inestable; −4 o menos, mucho. Misma familia que el CAPE.",
+    cin: "Tapa sobre los chubascos. Barra alta = la tapa está baja, pueden arrancar. Barra baja = la tapa los frena. Se lee con el CAPE.",
+    soil: "El suelo húmedo escurre antes. A partir de ~0,3 m³/m³ la lluvia nueva se estanca antes. El suelo seco también puede llenarse si llueve lo bastante fuerte.",
+  },
+  en: {
+    rain: "Rain in 24 h. From ~20 mm on a flood-prone area the bar rises. ~50 mm in the model under cold air aloft is already a lot: global models often under-do Mediterranean downpours.",
+    setup: "Cold air aloft, column water, warm sea and wind off the sea. From ~50 that pattern is in place. Read it with the rain: without millimetres it is only the sky.",
+    instability: "How easily air rises (CAPE and lifted index). From CAPE ~1000 or lifted below 0 showers grow fast. Mediterranean floods often sit at only 500–1500: millimetres and stalling weigh more.",
+    persistence: "How long it lasts. From about 4 wet hours in a row a rambla can fill. Six hours of moderate rain is more than one short shower.",
+    moisture: "Dew point at 2 m. From ~16 °C the air can feed heavy rain; 19–22 °C is very humid. Summer nights often score high here with no rain.",
+    moisture850: "Moisture at ~1,500 m. From ~70% RH the feed off the sea is on. Low = dry air aloft: showers struggle to grow.",
+    pwat: "All the water in the column (kg/m² ≈ mm). Fuel from ~35 mm; ~42 mm is very high. High without cold air and rain is just a humid atmosphere.",
+    sst: "Sea surface. From ~26 °C extra fuel; 28 °C+ is typical before autumn DANAs. A warm sea in August is normal.",
+    coldCore: "Temperature at ~5,500 m. From about −15 °C there is a real cold core. 0 = warm up there, as in a heatwave.",
+    geopotential: "How deep the 500 hPa low is. From ~5680 m a trough; ~5600 m or lower a deep low. 0 = high pressure.",
+    onshore: "Wind off the sea at ~1,500 m. From ~20 km/h it pushes moisture onto the coast. Read it with cold air aloft; a hot-day sea breeze is something else.",
+    cape: "Storm energy (J/kg). From ~1000 local showers; 2500+ violent. On Mediterranean floods this bar is often only mid-range: look at the rain and whether it stalls.",
+    gradient: "Ground minus ~5,500 m. Normal ~36 °C. From ~52 °C air can rise fast if it is moist. At night or in heat without a cold core it stays at 0.",
+    lifted: "More negative = air rises more easily. From 0 unstable; −4 or below very unstable. Same family as CAPE.",
+    cin: "A lid on showers. High bar = the lid is down, they can fire. Low bar = the lid holds them. Read it with CAPE.",
+    soil: "Wet ground runs off sooner. From ~0.3 m³/m³ new rain ponds faster. Dry soil can still fill if the rain is hard enough.",
+  },
+  de: {
+    rain: "Regen in 24 h. Ab ~20 mm in einem Risikogebiet steigt die Leiste. ~50 mm im Modell unter Kaltluft oben ist schon viel: Globalmodelle unterschätzen Mittelmeerregen oft.",
+    setup: "Kaltluft oben, Wassersäule, warmes Meer und Wind vom Meer. Ab ~50 steht dieses Muster. Mit dem Regen lesen: ohne Millimeter ist es nur die Luft.",
+    instability: "Wie leicht Luft steigt (CAPE und Lifted Index). Ab CAPE ~1000 oder Lifted unter 0 wachsen Schauer schnell. Mediterrane Hochwasser liegen oft nur bei 500–1500: Millimeter und Stillstand zählen mehr.",
+    persistence: "Wie lange es dauert. Ab etwa 4 nassen Stunden kann ein Bachbett volllaufen. Sechs Stunden mäßiger Regen sind mehr als ein kurzer Schauer.",
+    moisture: "Taupunkt in 2 m. Ab ~16 °C kann die Luft Starkregen speisen; 19–22 °C ist sehr feucht. Sommernächte stehen hier oft hoch ohne Regen.",
+    moisture850: "Feuchte in ~1.500 m. Ab ~70 % RH kommt die Luft vom Meer. Niedrig = trockene Luft oben: Schauer wachsen schwer.",
+    pwat: "Alles Wasser in der Säule (kg/m² ≈ mm). Treibstoff ab ~35 mm; ~42 mm ist sehr hoch. Hoch ohne Kaltluft und Regen ist nur feuchte Luft.",
+    sst: "Meer. Ab ~26 °C extra Treibstoff; 28 °C+ ist typisch vor Herbst-DANAs. Ein warmes Meer im August ist normal.",
+    coldCore: "Temperatur in ~5.500 m. Ab etwa −15 °C gibt es einen echten Kaltkern. 0 = oben warm, wie bei einer Hitzewelle.",
+    geopotential: "Wie tief das 500-hPa-Tief ist. Ab ~5680 m Trog; ~5600 m oder tiefer ein kräftiges Tief. 0 = Hochdruck.",
+    onshore: "Wind vom Meer in ~1.500 m. Ab ~20 km/h drückt er Feuchte an die Küste. Mit Kaltluft oben lesen; eine Seewindbrise am Hitzetag ist etwas anderes.",
+    cape: "Gewitterenergie (J/kg). Ab ~1000 lokale Schauer; 2500+ heftig. Bei mediterranen Hochwassern ist diese Leiste oft nur mittel: auf Regen und Stillstand achten.",
+    gradient: "Boden minus ~5.500 m. Normal ~36 °C. Ab ~52 °C kann Luft schnell steigen, wenn Feuchte da ist. Nachts oder bei Hitze ohne Kaltkern bleibt 0.",
+    lifted: "Stärker negativ = Luft steigt leichter. Ab 0 labil; −4 oder darunter sehr labil. Dieselbe Familie wie CAPE.",
+    cin: "Deckel über Schauern. Hohe Leiste = Deckel weg, sie können starten. Niedrige Leiste = Deckel bremst. Mit CAPE lesen.",
+    soil: "Nasser Boden fließt schneller ab. Ab ~0,3 m³/m³ staut neuer Regen früher. Trockener Boden kann trotzdem volllaufen, wenn es hart genug regnet.",
+  },
+  nl: {
+    rain: "Regen in 24 uur. Vanaf ~20 mm in een overstromingsgebied gaat de balk omhoog. ~50 mm in het model onder koude lucht boven is al veel: wereldmodellen missen Mediterrane buien vaak.",
+    setup: "Koude lucht hoog, kolomwater, warme zee en wind vanaf zee. Vanaf ~50 staat dat patroon. Samen met de regen lezen: zonder millimeters is het alleen de lucht.",
+    instability: "Hoe makkelijk lucht stijgt (CAPE en lifted index). Vanaf CAPE ~1000 of lifted onder 0 groeien buien snel. Mediterrane overstromingen hebben vaak maar 500–1500: de millimeters en of de regen blijft hangen wegen zwaarder.",
+    persistence: "Hoe lang het aanhoudt. Vanaf ongeveer 4 natte uren achter elkaar kan een rambla vollopen. Zes uur matige regen is meer dan één korte bui.",
+    moisture: "Dauwpunt op 2 m. Vanaf ~16 °C kan de lucht zware regen voeden; 19–22 °C is zeer vochtig. Zomernachten scoren hier vaak hoog zonder regen.",
+    moisture850: "Vocht op ~1.500 m. Vanaf ~70% RV is de aanvoer vanaf zee actief. Laag = droge lucht boven: buien groeien moeizaam.",
+    pwat: "Al het water in de luchtkolom (kg/m² ≈ mm). Brandstof vanaf ~35 mm; ~42 mm is zeer hoog. Hoog zonder koude lucht en regen is gewoon een vochtige atmosfeer.",
+    sst: "Zee-oppervlak. Vanaf ~26 °C extra brandstof voor buien; 28 °C+ is typisch voor DANA in de herfst. In augustus is een warme zee normaal.",
+    coldCore: "Temperatuur op ~5.500 m. Vanaf ongeveer −15 °C is er een echte koude kern. 0 = warm daarboven, zoals bij een hittegolf.",
+    geopotential: "Hoe diep het laag is op 500 hPa. Vanaf ~5680 m een trog; ~5600 m of lager een diep laag. 0 = hogedruk.",
+    onshore: "Wind van zee op ~1.500 m. Vanaf ~20 km/u duwt die vocht de kust op. Samen met koude lucht boven lezen; zeewind op een hitte-dag is iets anders.",
+    cape: "Onweersenergie (J/kg). Vanaf ~1000 lokale buien; 2500+ heftig. Bij Mediterrane overstromingen staat deze balk vaak maar middelhoog: kijk naar regen en of die blijft hangen.",
+    gradient: "Verschil grond min ~5.500 m. Rond 36 °C is normaal. Vanaf ~52 °C kan lucht hard stijgen als er vocht bij is. ’s Nachts of bij hitte zonder koude kern blijft 0.",
+    lifted: "Negatiever = lucht stijgt makkelijker. Vanaf 0 onstabiel; −4 of lager zeer onstabiel. Dezelfde familie als CAPE.",
+    cin: "Een deksel op buien. Hoge balk = het deksel is weg, buien kunnen starten. Lage balk = het deksel houdt ze tegen. Samen met CAPE lezen.",
+    soil: "Natte bodem loopt sneller af. Vanaf ~0,3 m³/m³ blijft nieuwe regen eerder staan. Droge bodem kan ook vollopen als het hard genoeg regent.",
+  },
+  cs: {
+    rain: "Déšť za 24 h. Od ~20 mm v ohrožené oblasti pruh stoupá. ~50 mm v modelu pod studeným vzduchem nahoře je už hodně: globální modely středomořské lijáky často podstřelují.",
+    setup: "Studený vzduch nahoře, voda ve sloupci, teplé moře a vítr od moře. Od ~50 ten vzor je. Číst s deštěm: bez milimetrů je to jen vzduch.",
+    instability: "Jak snadno vzduch stoupá (CAPE a lifted index). Od CAPE ~1000 nebo lifted pod 0 přeháňky rostou rychle. Středomořské povodně mají často jen 500–1500: víc počítají mm a zda déšť stojí.",
+    persistence: "Jak dlouho to trvá. Od zhruba 4 mokrých hodin za sebou se koryto může naplnit. Šest hodin mírného deště je víc než jedna krátká přeháňka.",
+    moisture: "Rosný bod ve 2 m. Od ~16 °C může vzduch krmit silný déšť; 19–22 °C je velmi vlhko. Letní noci tu často skórují vysoko bez deště.",
+    moisture850: "Vlhkost v ~1 500 m. Od ~70 % RV je přísun od moře. Nízko = suchý vzduch nahoře: přeháňky rostou těžko.",
+    pwat: "Všechna voda ve sloupci (kg/m² ≈ mm). Palivo od ~35 mm; ~42 mm je velmi vysoko. Vysoko bez studeného vzduchu a deště je jen vlhká atmosféra.",
+    sst: "Moře. Od ~26 °C extra palivo; 28 °C+ je typické před podzimními DANA. Teplé moře v srpnu je běžné.",
+    coldCore: "Teplota v ~5 500 m. Od asi −15 °C je skutečné studené jádro. 0 = nahoře teplo, jako při vlně veder.",
+    geopotential: "Jak hluboká je níže v 500 hPa. Od ~5680 m brázda; ~5600 m nebo níž hluboká níže. 0 = vysoký tlak.",
+    onshore: "Vítr od moře v ~1 500 m. Od ~20 km/h tlačí vlhkost na pobřeží. Číst se studeným vzduchem nahoře; mořský vánek v horku je něco jiného.",
+    cape: "Energie bouří (J/kg). Od ~1000 místní přeháňky; 2500+ prudké. U středomořských povodní je tento pruh často jen střední: sledujte déšť a zda stojí.",
+    gradient: "Zem minus ~5 500 m. Běžně ~36 °C. Od ~52 °C může vzduch stoupat rychle, je-li vlhko. V noci nebo při vedru bez studeného jádra zůstane 0.",
+    lifted: "Víc záporné = vzduch stoupá snáz. Od 0 nestabilní; −4 a níž velmi. Stejná rodina jako CAPE.",
+    cin: "Víčko nad přeháňkami. Vysoký pruh = víčko pryč, mohou startovat. Nízký pruh = víčko brzdí. Číst s CAPE.",
+    soil: "Mokrá půda odtéká dřív. Od ~0,3 m³/m³ se nový déšť dřív hromadí. Suchá půda se pořád může naplnit, když prší dost silně.",
+  },
+};

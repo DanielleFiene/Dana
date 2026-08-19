@@ -1,0 +1,3 @@
+export function atIndex<T>(arr: readonly T[], i: number): T | undefined {
+  return arr[i];
+}

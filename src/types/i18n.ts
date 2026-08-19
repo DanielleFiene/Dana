@@ -1,0 +1,56 @@
+import type { RiskLevel } from "@/types/risk";
+import type { FactorKey } from "@/types/weather";
+
+export type LevelCopy = {
+  name: string;
+  hint: string;
+};
+
+export type Copy = {
+  title: string;
+  tag: string;
+  official: string;
+  civil: string;
+  search: string;
+  locate: string;
+  locating: string;
+  save: string;
+  saved: string;
+  myLocation: string;
+  language: string;
+  next48: string;
+  week: string;
+  outlook: string;
+  mm: string;
+  shock: string;
+  cape: string;
+  sst: string;
+  t2: string;
+  t500: string;
+  gust: string;
+  factors: string;
+  factorScale: string;
+  legend: string;
+  outside: string;
+  fail: string;
+  retry: string;
+  loading: string;
+  disclaimerTitle: string;
+  disclaimer: string;
+  data: string;
+  emptySearch: string;
+  remove: string;
+  patternNotRain: string;
+  hourlyLabel: string;
+  mapHint: string;
+  radar: string;
+  radarHint: string;
+  shockHelp: string;
+  methodTitle: string;
+  methodLead: string;
+  methodFormula: string;
+  methodWhyGate: string;
+  levels: Record<RiskLevel, LevelCopy>;
+  indicator: Record<FactorKey, string>;
+  indicatorHelp: Record<FactorKey, string>;
+};
