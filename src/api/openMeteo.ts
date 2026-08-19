@@ -5,7 +5,8 @@ import type { Coord } from "@/types/weather";
 
 const FORECAST_ORIGIN = "https://api.open-meteo.com/v1/forecast";
 
-const HOURLY = [
+/** Same hourly block as the live desk — historical replay must not drift. */
+export const FORECAST_HOURLY = [
   "temperature_2m",
   "dew_point_2m",
   "relative_humidity_2m",
@@ -30,8 +31,8 @@ const HOURLY = [
   "total_column_integrated_water_vapour",
 ].join(",");
 
-const PATTERN_HOURLY = "temperature_500hPa,geopotential_height_500hPa";
-const ECMWF_IFS = "ecmwf_ifs025";
+export const PATTERN_HOURLY = "temperature_500hPa,geopotential_height_500hPa";
+export const ECMWF_IFS = "ecmwf_ifs025";
 
 export type { Coord };
 
@@ -39,7 +40,7 @@ function forecastUrl(points: Coord[]): URL {
   const url = new URL(FORECAST_ORIGIN);
   url.searchParams.set("latitude", points.map((p) => p.lat.toFixed(4)).join(","));
   url.searchParams.set("longitude", points.map((p) => p.lon.toFixed(4)).join(","));
-  url.searchParams.set("hourly", HOURLY);
+  url.searchParams.set("hourly", FORECAST_HOURLY);
   url.searchParams.set("forecast_days", "7");
   url.searchParams.set("timezone", "Europe/Madrid");
   url.searchParams.set("wind_speed_unit", "kmh");

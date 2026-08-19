@@ -98,6 +98,8 @@ GitHub Pages: push, enable Pages from GitHub Actions. `BASE_PATH` follows the re
 
 Unit tests lock the lapse-rate example, dry heat that must not score as a flood, corridor upscale, dual-model cut-off, geofence, and sanitisation. `npm run test:integration` hits live Open-Meteo.
 
+`npm run backtest` replays the current score on labelled DANA days (Magre 2024 with riuada/quiet squares, Málaga Nov 2024, Murcia Sep 2023, plus dry controls) against Open-Meteo historical forecasts. That is a **near-analysis** stitch, not a 48-hour forecast. Model rain at T−24/T−48/T−72 is printed separately. SAIH gauges are not in this loop yet. Unlabelled Magre squares (Alacant, Vega Baja, Gibraltar, …) stay out of hit/miss counts until a documented flood exists for that day.
+
 ---
 
 ## Attribution
