@@ -2,7 +2,6 @@ import type { DayVerdict, PlaceDayRow } from "@/backtest/evaluate";
 import { aromePrecipAvailable } from "@/api/arome";
 import type { ForecastJson } from "@/api/schemas";
 import { corridorBelt } from "@/data/hotspots";
-import { MAGRE_CORE_OBSERVED } from "@/data/probes";
 
 export type AromeKind =
   | "same"
@@ -122,7 +121,7 @@ export function formatMagreSpatial(mixRows: readonly PlaceDayRow[], aromeRows: r
   const peak = "2024-10-29";
   const aromeMm = new Map(aromeRows.filter((r) => r.date === peak).map((r) => [r.hotspotId, r.precipMm]));
   const lines = [
-    `Magre 29 Oct model mm vs observed core ~${MAGRE_CORE_OBSERVED.dayMm.from}–${MAGRE_CORE_OBSERVED.dayMm.to} mm (peak hour ~${MAGRE_CORE_OBSERVED.peakHourMm} mm). Even AROME's best cell is still ~3× short. corridorBelt is a label only. Inland vs coast needs a majority across several independent inland-orographic cells before it is a rule. Murcia Sep 2023 AROME all-null is a different question (archive), not this table.`,
+    "Magre 29 Oct model mm vs AEMET Turís (14 h) / SAIH 8-day episode-sums (table above — not a model-day match). Even AROME's best cell is still ~3× short of Turís. corridorBelt is a label only. Inland vs coast needs a majority across several independent inland-orographic cells before it is a rule. Murcia Sep 2023 AROME all-null is a different question (archive), not this table.",
     "square             belt                 mix   arome",
   ];
   for (const row of mixRows.filter((r) => r.date === peak)) {

@@ -72,6 +72,9 @@ describe("DANA event replay (historical Open-Meteo)", () => {
     expect(suite.text).toContain("AROME France vs ICON/ECMWF mix");
     expect(suite.text).toContain("Turís");
     expect(suite.text).toContain("700");
+    expect(suite.text).toContain("621.0");
+    expect(suite.text).toContain("545.3");
+    expect(suite.text).toContain("sensor lost before the peak");
     expect(suite.text).toContain("leftover-rain");
     expect(suite.text).toContain("ECMWF IFS ENS");
     expect(suite.text).not.toContain("AROME saw it");

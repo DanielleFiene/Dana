@@ -178,6 +178,9 @@ describe("Magre lead framing", () => {
     ]);
     expect(text).toContain("700");
     expect(text).toContain("3× short");
+    expect(text).toContain("621.0");
+    expect(text).toContain("8-day episode-sum");
+    expect(text).toContain("not rain");
     expect(text).not.toContain("AROME saw it");
   });
 });

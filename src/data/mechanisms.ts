@@ -44,7 +44,7 @@ export const SQUARE_ANATOMY: readonly SquareAnatomy[] = [
     hotspotId: "utiel-requena",
     when: "hit-despite-undercatch",
     desk: "grid-undercatch",
-    note: "Mix ~42 mm vs ~700–770 mm at Turís/Chiva. AROME ~203 mm on this square is less wrong, still ~3× short. Corridor upscale still reached 3. A hit, not a miss — do not retune, and do not sell AROME as the fix.",
+    note: "Mix ~42 mm vs AEMET Turís ~700–770 mm (14 h on the 29th) and SAIH Chiva 621 mm (8-day episode-sum, not a 24 h total). AROME ~203 mm on this square is less wrong, still ~3× short of Turís. Corridor upscale still reached 3. A hit, not a miss — do not retune, and do not sell AROME as the fix.",
   },
   {
     eventId: "2024-11-catalunya",

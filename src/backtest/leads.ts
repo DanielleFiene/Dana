@@ -1,6 +1,6 @@
 import { AROME_FRANCE } from "@/api/arome";
 import { fetchLeadPrecip, type LeadPrecip } from "@/api/historical";
-import { CHIVA, MAGRE_CORE_OBSERVED, PORTO_CRISTO, TURIS } from "@/data/probes";
+import { CHIVA, formatMagreObserved, PORTO_CRISTO, TURIS } from "@/data/probes";
 import { hotspotById } from "@/data/hotspots";
 import type { Coord } from "@/types/weather";
 
@@ -42,7 +42,8 @@ export async function fetchMagreLeadContrast(date: string): Promise<NamedLead[]>
 export function formatMagreLeadContrast(rows: readonly NamedLead[]): string {
   const lines = [
     "Turís / Chiva vs desk squares — previous-run millimetres on 29 Oct 2024 (analysis / T−24 / T−48 / T−72).",
-    `Observed core ~${MAGRE_CORE_OBSERVED.dayMm.from}–${MAGRE_CORE_OBSERVED.dayMm.to} mm, peak hour ~${MAGRE_CORE_OBSERVED.peakHourMm} mm. AROME's best cell (Chiva T−24 240 mm) is less wrong than ICON/ECMWF on those two cells, still ~3× short. Grid-undercatch remains. AROME T−48/T−72 is empty (2-day horizon), not zero.`,
+    formatMagreObserved(),
+    "AROME's best cell (Chiva T−24 240 mm) is less wrong than ICON/ECMWF on those two cells, still ~3× short of AEMET Turís. Grid-undercatch remains. AROME T−48/T−72 is empty (2-day horizon), not zero.",
   ];
   for (const r of rows) {
     lines.push(
