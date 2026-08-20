@@ -11,9 +11,9 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/backtest/**/*.test.ts"],
-    testTimeout: 90_000,
+    testTimeout: 900_000,
     hookTimeout: 90_000,
-    retry: 1,
+    retry: 0,
     silent: false,
   },
 });

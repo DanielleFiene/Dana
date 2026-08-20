@@ -86,6 +86,7 @@ export type HourScore = {
   factors: Partial<Record<FactorKey, number>>;
   thermalGradientC: number | null;
   precip24hMm: number | null;
+  precip48hMm: number | null;
   precipHourMm: number | null;
   cape: number | null;
   sst: number | null;

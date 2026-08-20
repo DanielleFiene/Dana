@@ -10,7 +10,7 @@ export class HttpError extends Error {
   }
 }
 
-export async function getJson(url: URL, timeoutMs = DEFAULT_TIMEOUT_MS): Promise<unknown> {
+export async function getJson(url: URL, timeoutMs = DEFAULT_TIMEOUT_MS, retries = 5): Promise<unknown> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -22,6 +22,10 @@ export async function getJson(url: URL, timeoutMs = DEFAULT_TIMEOUT_MS): Promise
       credentials: "omit",
       referrerPolicy: "no-referrer",
     });
+    if (res.status === 429 && retries > 0) {
+      await new Promise((r) => setTimeout(r, 2000 * 2 ** (5 - retries)));
+      return getJson(url, timeoutMs, retries - 1);
+    }
     if (!res.ok) throw new HttpError(`HTTP ${res.status}`, res.status);
     return await res.json();
   } catch (err) {

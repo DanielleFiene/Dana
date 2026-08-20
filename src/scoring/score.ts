@@ -138,6 +138,7 @@ export function scoreHour(sample: HourSample, ctx: ScoreContext): HourScore {
     },
     thermalGradientC: g,
     precip24hMm: ctx.precip24hMm,
+    precip48hMm: ctx.precip48hMm ?? null,
     precipHourMm: sample.precipitation,
     cape: sample.cape,
     sst: sample.sst,

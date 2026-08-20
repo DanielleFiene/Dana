@@ -265,6 +265,35 @@ export function hotspotById(id: string): Hotspot | undefined {
   return HOTSPOTS.find((h) => h.id === id);
 }
 
+/** AROME France domain on Open-Meteo: not Málaga / Almería / Gibraltar. Always pass models=arome_france. */
+const AROME_OUT = new Set(["almeria", "malaga", "gibraltar"]);
+
+export function aromeCovers(hotspotId: string): boolean {
+  return !AROME_OUT.has(hotspotId);
+}
+
+/** Magre inland vs coast is an observable hypothesis, not a score input.
+ *  Magre Utiel is one inland-orographic cell. A second inland win is still 2–2 against Murcia/Tarragona.
+ *  Do not say "rule" before a majority across INLAND_AROME_RULE_MIN_CELLS independent inland-orographic labelled cells.
+ *  Murcia Sep 2023 AROME all-null is an Open-Meteo archive gap — not a model miss and not this hypothesis.
+ */
+export type CorridorBelt = "inland-orographic" | "coastal-plain" | "inland-basin" | "island" | "south";
+
+export const INLAND_AROME_RULE_MIN_CELLS = 6;
+
+export function corridorBelt(hotspotId: string): CorridorBelt {
+  if (hotspotId === "utiel-requena") return "inland-orographic";
+  if (hotspotId === "murcia") return "inland-basin";
+  if (hotspotId === "mallorca" || hotspotId === "pitiusas") return "island";
+  if (hotspotId === "malaga" || hotspotId === "almeria" || hotspotId === "gibraltar") return "south";
+  return "coastal-plain";
+}
+
+/** Only inland-orographic labelled cells. Mallorca (island) and Almería (south, out of AROME) do not increment the 6. */
+export function countsTowardInlandAromeRule(hotspotId: string): boolean {
+  return corridorBelt(hotspotId) === "inland-orographic";
+}
+
 export function sstStationById(id: SstStationId): SstStation {
   const s = SST_STATIONS.find((x) => x.id === id);
   if (!s) throw new Error(`Unknown SST station ${id}`);
