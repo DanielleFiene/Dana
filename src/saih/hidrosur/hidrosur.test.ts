@@ -2,7 +2,8 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { CARTAMA_FLOW, CARTAMA_RAIN, CARTAMA_STAGE, CONFIRMED_ON_FORM } from "@/saih/hidrosur/catalog";
+import { CARTAMA_FLOW, CARTAMA_RAIN, CARTAMA_STAGE, CONFIRMED_ON_FORM, FAROLA_RAIN } from "@/saih/hidrosur/catalog";
+import { findFarola, pullFarolaMalaga2024, writeFarolaFixture } from "@/saih/hidrosur/fetchFarola";
 import {
   CookieJar,
   csvUrl,
@@ -22,6 +23,7 @@ import {
   CARTAMA_SAIH_FLOW,
   CARTAMA_SAIH_RAIN,
   CARTAMA_SAIH_STAGE,
+  FAROLA_SAIH_RAIN,
 } from "@/data/probes";
 
 const SAMPLE_CSV = [
@@ -37,6 +39,13 @@ const SAMPLE_NIVEL_CSV = [
   "38;RÍO GUADALHORCE (CARTAMA) (MA);038R03;13/11/24 18:00;1,84;210,20;0",
   "38;RÍO GUADALHORCE (CARTAMA) (MA);038R03;14/11/24 10:00;3,08;455,59;0",
   "38;RÍO GUADALHORCE (CARTAMA) (MA);038R03;14/11/24 11:00;n/d;n/d;0",
+].join("\r");
+
+const SAMPLE_FAROLA_CSV = [
+  "Estación;Nombre;Sensor;Fecha;Nombre;Acumulado (l/m2)",
+  "22;MÁLAGA - PASEO DE LA FAROLA (MA);022P01;13/11/2024 11:00;PLUVIÓMETRO;12,40",
+  "22;MÁLAGA - PASEO DE LA FAROLA (MA);022P01;13/11/2024 12:00;PLUVIÓMETRO;8,10",
+  "22;OTRA;999P01;13/11/2024 14:00;PLUVIÓMETRO;99,00",
 ].join("\r");
 
 describe("Hidrosur CSV parse", () => {
@@ -89,6 +98,7 @@ describe("Hidrosur catalog", () => {
     });
     expect(findCartama(stations)?.sensors.map((s) => s.id)).toEqual(["038P01", "038R03", "038X01"]);
     expect(findCartama([])).toBeUndefined();
+    expect(findFarola([])).toBeUndefined();
     expect(CARTAMA_RAIN.sensorId).toBe("038P01");
     expect(CARTAMA_STAGE.sensorId).toBe("038R03");
     expect(CARTAMA_STAGE.quantity).toBe("stage");
@@ -106,6 +116,10 @@ describe("Hidrosur catalog", () => {
     }))).toBeUndefined();
     expect(CONFIRMED_ON_FORM.some((s) => s.sensorId === "038P01")).toBe(true);
     expect(CONFIRMED_ON_FORM.some((s) => s.sensorId === "038R03" && s.letter === "R")).toBe(true);
+    expect(CONFIRMED_ON_FORM.some((s) => s.sensorId === "022P01")).toBe(true);
+    expect(FAROLA_RAIN.sensorId).toBe("022P01");
+    expect(FAROLA_RAIN.stationId).toBe("22");
+    expect(FAROLA_RAIN.quantity).toBe("rain");
   });
 
   it("puts agrupacion and the Cártama sensor on the CSV URL", () => {
@@ -235,5 +249,59 @@ describe("Hidrosur Cártama pull", () => {
     expect(stage[0]?.fecha).toBe("2024-11-13T17:00:00.000Z");
     expect(madridCalendarDate("2024-11-12T23:00:00.000Z")).toBe("2024-11-13");
     expect(madridCalendarDate("2024-11-14T09:00:00.000Z")).toBe("2024-11-14");
+  });
+});
+
+describe("Hidrosur Farola pull", () => {
+  const farolaStations = parseParametros({
+    "22": {
+      nombre: "MÁLAGA - PASEO DE LA FAROLA (MA)",
+      subsistema: "I4",
+      tipoestacion: ["A"],
+      sensores: ["022P01"],
+      nombres: ["PLUVIÓMETRO"],
+    },
+  });
+
+  it("refuses to invent Farola when the station is missing", async () => {
+    const miss = await pullFarolaMalaga2024(mockClient({}));
+    expect(miss.ok).toBe(false);
+    if (!miss.ok) expect(miss.kind).toBe("parse");
+  });
+
+  it("writes a city-core rain fixture without mixing Cártama ids", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "hidrosur-farola-"));
+    const pull = await pullFarolaMalaga2024(
+      mockClient({
+        stations: farolaStations,
+        csv: SAMPLE_FAROLA_CSV,
+      }),
+    );
+    expect(pull.ok).toBe(true);
+    if (!pull.ok) return;
+    expect(pull.value.rain.sensorId).toBe("022P01");
+    expect(pull.value.rain.stationId).toBe("22");
+    expect(pull.value.rain.points.map((p) => p.valor)).toEqual([12.4, 8.1]);
+    await writeFarolaFixture(dir, pull.value, "2026-08-21T12:00:00.000Z");
+    const jsonl = await readFile(join(dir, "src/saih/hidrosur/fixtures/022P01-2024-11-malaga.jsonl"), "utf8");
+    expect(jsonl).toContain("12.4");
+    expect(jsonl).not.toContain("99");
+    expect(jsonl).not.toContain("038P01");
+  });
+
+  it("keeps the labelled 13 Nov 2024 Farola hours on disk", async () => {
+    const raw = await readFile(new URL("./fixtures/022P01-2024-11-malaga.jsonl", import.meta.url), "utf8");
+    const points = raw
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as { fecha: string; valor: number | null; estado: null });
+    expect(points).toHaveLength(120);
+    expect(sumOnMadridDate(points, "2024-11-13")).toBeCloseTo(FAROLA_SAIH_RAIN.dayMm, 5);
+    expect(peakOnMadridDate(points, "2024-11-13")?.valor).toBeCloseTo(FAROLA_SAIH_RAIN.peakHourMm, 5);
+    const episode = ["2024-11-11", "2024-11-12", "2024-11-13", "2024-11-14", "2024-11-15"].reduce(
+      (s, d) => s + sumOnMadridDate(points, d),
+      0,
+    );
+    expect(episode).toBeCloseTo(FAROLA_SAIH_RAIN.episode.mm, 5);
   });
 });

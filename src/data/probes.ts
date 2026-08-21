@@ -134,6 +134,8 @@ export const POYO_N3_CAUDAL = {
 
 /** Guadalhorce at Cártama town — west of the Málaga desk-square centre. */
 export const SAIH_CARTAMA: Coord = { lat: 36.737, lon: -4.632 };
+/** Málaga port promenade — city core, near the desk-square centre. */
+export const SAIH_FAROLA: Coord = { lat: 36.716, lon: -4.415 };
 
 /**
  * Hidrosur Cártama pluvio. 24 h Europe/Madrid on the labelled 13 Nov day
@@ -166,6 +168,41 @@ export const CARTAMA_SAIH_RAIN = {
   dayMm: 77.3,
   peakHourMm: 19.2,
   peakHourAtLocal: "2024-11-13 12:00",
+} as const;
+
+/**
+ * Hidrosur Farola pluvio — Málaga city core, not the Guadalhorce gauge.
+ * 24 h on 13 Nov *is* comparable to a model calendar day. Same order as
+ * Cártama (81 vs 77 mm): does not reclassify the square as Magre-core
+ * grid-undercatch. Peak hour is sharper than Cártama. Not CHG.
+ */
+export const FAROLA_SAIH_RAIN = {
+  id: "farola-rain",
+  quantity: "rain" as const,
+  source: "hidrosur",
+  name: "Málaga — Paseo de la Farola",
+  code: "022P01",
+  coord: SAIH_FAROLA,
+  window: {
+    kind: "hourly-day" as const,
+    hours: 24,
+    date: "2024-11-13",
+    timezone: "Europe/Madrid",
+    comparableToModelDay: true,
+  },
+  episode: {
+    kind: "episode-sum" as const,
+    days: 5,
+    from: "2024-11-11 00:00",
+    to: "2024-11-15 23:59",
+    timezone: "Europe/Madrid",
+    comparableToModelDay: false,
+    mm: 100.9,
+  },
+  dayMm: 81.3,
+  peakHourMm: 49.3,
+  peakHourAtLocal: "2024-11-13 14:00",
+  note: "City-core millimetres. Not Cártama 038P01. Not stage. Does not increment inland-orographic.",
 } as const;
 
 /**
@@ -217,6 +254,13 @@ export function formatCartamaObserved(): string {
     `${CARTAMA_SAIH_RAIN.episode.days}-day episode-sum ${CARTAMA_SAIH_RAIN.episode.from}–${CARTAMA_SAIH_RAIN.episode.to} is ${CARTAMA_SAIH_RAIN.episode.mm} mm — almost all the 13th, not a Magre-style 8-day mix. Do not use the episode-sum as the model-day referee.`,
     `Stage ${CARTAMA_SAIH_STAGE.code} (nivel, public series — Poyo has none): 13 Nov max ${CARTAMA_SAIH_STAGE.day13MaxM} m at ${CARTAMA_SAIH_STAGE.day13MaxAtLocal}; window peak ${CARTAMA_SAIH_STAGE.peakM} m at ${CARTAMA_SAIH_STAGE.peakAtLocal}. Rain peak ${CARTAMA_SAIH_RAIN.peakHourAtLocal} → stage peak ${CARTAMA_SAIH_STAGE.lagFromRainPeakHours} h later. One catchment, one event — not a routing rule. Not rain, not caudal.`,
     `Flow from the same ${CARTAMA_SAIH_FLOW.code} CSV (caudal column, not ${CARTAMA_SAIH_STAGE.id}): 13 Nov max ${CARTAMA_SAIH_FLOW.day13MaxM3s} m³/s; window peak ${CARTAMA_SAIH_FLOW.peakM3s} m³/s at the same ${CARTAMA_SAIH_FLOW.peakAtLocal} hour.`,
+  ].join("\n");
+}
+
+export function formatFarolaObserved(): string {
+  return [
+    `Hidrosur Farola ${FAROLA_SAIH_RAIN.code} rain (Málaga city core, not Cártama): ${FAROLA_SAIH_RAIN.dayMm} mm in ${FAROLA_SAIH_RAIN.window.hours} h on ${FAROLA_SAIH_RAIN.window.date} (Europe/Madrid). Peak hour ${FAROLA_SAIH_RAIN.peakHourMm} mm at ${FAROLA_SAIH_RAIN.peakHourAtLocal}. This 24 h sum is comparable to a model calendar day. Same order as Cártama ${CARTAMA_SAIH_RAIN.dayMm} mm — not Magre-core, does not reclassify the square as grid-undercatch.`,
+    `${FAROLA_SAIH_RAIN.episode.days}-day episode-sum is ${FAROLA_SAIH_RAIN.episode.mm} mm. Do not mix with Cártama 038R03 stage/flow. Not CHG. Not wired into the live score. Does not increment inland-orographic.`,
   ].join("\n");
 }
 

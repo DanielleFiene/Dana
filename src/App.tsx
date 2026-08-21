@@ -252,6 +252,7 @@ export function App() {
         </div>
         <PlaceSearch
           lang={lang}
+          selectedName={active?.place.name ?? ""}
           onPick={(hit) => {
             void selectPlace(placeFromCoord(hit.id, hit.name, hit.lat, hit.lon), !inSpainAutoLocate(hit.lat, hit.lon), "pin");
           }}

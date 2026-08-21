@@ -4,6 +4,7 @@ import { fileURLToPath } from "node:url";
 import { CONFIRMED_ON_FORM } from "./catalog.ts";
 import { createClient } from "./client.ts";
 import { fixturePaths, pullCartamaMalaga2024, writeCartamaFixture } from "./fetchCartama.ts";
+import { farolaFixturePaths, pullFarolaMalaga2024, writeFarolaFixture } from "./fetchFarola.ts";
 
 export function findRepoRoot(fromFile: string): string {
   let dir = dirname(fromFile);
@@ -18,8 +19,9 @@ export function findRepoRoot(fromFile: string): string {
 
 const HELP = `Hidrosur CSV (Junta de Andalucía). Not CHG.
 
-  npm run saih:hidrosur           fetch Cártama 038P01 rain + 038R03 nivel/caudal for 11–15 Nov 2024
-  npm run saih:hidrosur -- --list print corridor sensors confirmed on the form
+  npm run saih:hidrosur                fetch Cártama 038P01 rain + 038R03 nivel/caudal and Farola 022P01 rain for 11–15 Nov 2024
+  npm run saih:hidrosur -- --farola-only  Farola 022P01 only (does not rewrite Cártama fixtures)
+  npm run saih:hidrosur -- --list      print corridor sensors confirmed on the form
 `;
 
 export async function main(argv = process.argv): Promise<number> {
@@ -49,28 +51,49 @@ export async function main(argv = process.argv): Promise<number> {
     return 0;
   }
 
-  const pull = await pullCartamaMalaga2024(client);
-  if (!pull.ok) {
-    process.stderr.write(`Hidrosur ${pull.kind}: ${pull.error}\n`);
-    return 1;
-  }
+  const farolaOnly = argv.includes("--farola-only");
   const repoRoot = findRepoRoot(fileURLToPath(import.meta.url));
   const fetchedAt = new Date().toISOString();
-  await writeCartamaFixture(repoRoot, pull.value, fetchedAt);
-  const paths = fixturePaths(repoRoot);
-  const mm = pull.value.rain.points.reduce((s, p) => s + (p.valor ?? 0), 0);
-  const stageMax = pull.value.stage.points.reduce((m, p) => (p.valor != null && p.valor > m ? p.valor : m), 0);
-  const flowMax = pull.value.flow.points.reduce((m, p) => (p.valor != null && p.valor > m ? p.valor : m), 0);
+
+  if (!farolaOnly) {
+    const pull = await pullCartamaMalaga2024(client);
+    if (!pull.ok) {
+      process.stderr.write(`Hidrosur ${pull.kind}: ${pull.error}\n`);
+      return 1;
+    }
+    await writeCartamaFixture(repoRoot, pull.value, fetchedAt);
+    const paths = fixturePaths(repoRoot);
+    const mm = pull.value.rain.points.reduce((s, p) => s + (p.valor ?? 0), 0);
+    const stageMax = pull.value.stage.points.reduce((m, p) => (p.valor != null && p.valor > m ? p.valor : m), 0);
+    const flowMax = pull.value.flow.points.reduce((m, p) => (p.valor != null && p.valor > m ? p.valor : m), 0);
+    process.stdout.write(
+      [
+        `Hidrosur Cártama ${pull.value.fromLocal} → ${pull.value.toLocal}`,
+        `stations on form ${pull.value.stationCount}; Cártama ${pull.value.stationName}`,
+        `rain ${pull.value.rain.sensorId}: ${pull.value.rain.points.length} points, ${mm.toFixed(1)} mm`,
+        `stage ${pull.value.stage.sensorId} nivel: ${pull.value.stage.points.length} points, max ${stageMax.toFixed(2)} m`,
+        `flow ${pull.value.flow.sensorId} caudal column: ${pull.value.flow.points.length} points, max ${flowMax.toFixed(2)} m³/s`,
+        `wrote ${paths.rainJsonl}`,
+        `wrote ${paths.stageJsonl}`,
+        `wrote ${paths.flowJsonl}`,
+      ].join("\n") + "\n",
+    );
+  }
+
+  const farola = await pullFarolaMalaga2024(client);
+  if (!farola.ok) {
+    process.stderr.write(`Hidrosur Farola ${farola.kind}: ${farola.error}\n`);
+    return 1;
+  }
+  await writeFarolaFixture(repoRoot, farola.value, fetchedAt);
+  const farolaPaths = farolaFixturePaths(repoRoot);
+  const farolaMm = farola.value.rain.points.reduce((s, p) => s + (p.valor ?? 0), 0);
   process.stdout.write(
     [
-      `Hidrosur Cártama ${pull.value.fromLocal} → ${pull.value.toLocal}`,
-      `stations on form ${pull.value.stationCount}; Cártama ${pull.value.stationName}`,
-      `rain ${pull.value.rain.sensorId}: ${pull.value.rain.points.length} points, ${mm.toFixed(1)} mm`,
-      `stage ${pull.value.stage.sensorId} nivel: ${pull.value.stage.points.length} points, max ${stageMax.toFixed(2)} m`,
-      `flow ${pull.value.flow.sensorId} caudal column: ${pull.value.flow.points.length} points, max ${flowMax.toFixed(2)} m³/s`,
-      `wrote ${paths.rainJsonl}`,
-      `wrote ${paths.stageJsonl}`,
-      `wrote ${paths.flowJsonl}`,
+      `Hidrosur Farola ${farola.value.fromLocal} → ${farola.value.toLocal}`,
+      `Farola ${farola.value.stationName}`,
+      `rain ${farola.value.rain.sensorId}: ${farola.value.rain.points.length} points, ${farolaMm.toFixed(1)} mm`,
+      `wrote ${farolaPaths.rainJsonl}`,
     ].join("\n") + "\n",
   );
   return 0;

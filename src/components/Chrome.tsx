@@ -31,17 +31,34 @@ export function OfficialLinks({ lang }: { lang: Lang }) {
 
 export function PlaceSearch({
   lang,
+  selectedName,
   onPick,
 }: {
   lang: Lang;
+  selectedName: string;
   onPick: (hit: PlaceHit) => void;
 }) {
   const t = copy[lang];
-  const [q, setQ] = useState("");
+  const [draft, setDraft] = useState<string | null>(null);
+  const [syncedName, setSyncedName] = useState(selectedName);
   const [hits, setHits] = useState<PlaceHit[]>([]);
   const [empty, setEmpty] = useState(false);
   const timerRef = useRef<number | null>(null);
   const seqRef = useRef(0);
+
+  if (selectedName !== syncedName) {
+    setSyncedName(selectedName);
+    setDraft(null);
+    setHits([]);
+    setEmpty(false);
+    seqRef.current += 1;
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  const q = draft ?? selectedName;
 
   useEffect(() => {
     return () => {
@@ -87,7 +104,7 @@ export function PlaceSearch({
   function choose(hit: PlaceHit) {
     clearTimer();
     seqRef.current += 1;
-    setQ(hit.name);
+    setDraft(hit.name);
     setHits([]);
     setEmpty(false);
     onPick(hit);
@@ -114,7 +131,7 @@ export function PlaceSearch({
           value={q}
           onChange={(ev) => {
             const next = ev.target.value;
-            setQ(next);
+            setDraft(next);
             scheduleLookup(next);
           }}
           placeholder={t.search}

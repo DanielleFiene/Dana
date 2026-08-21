@@ -5,9 +5,12 @@
  * Undocumented CodeIgniter portal. Same risk class as CHJ: a redesign
  * can break the CSV path. Fail loudly (session vs empty vs HTML vs 404).
  *
- * 038P01 (pluvio) and 038R03 (nivel CSV, which also carries a caudal column)
- * are the harvest targets. Other IDs below were seen on the form and are
- * not fetched. 038R03 nivel and 038R03 caudal are different quantities.
+ * 038P01 (Cártama pluvio), 038R03 (nivel CSV, which also carries a caudal
+ * column) and 022P01 (Farola pluvio) are the harvest targets for the
+ * labelled 13 Nov 2024 window. Farola is the Málaga city-core millimetre
+ * check; Cártama is the Guadalhorce catchment. Other IDs below were seen
+ * on the form and are not fetched. 038R03 nivel and 038R03 caudal are
+ * different quantities.
  */
 
 export const HIDROSUR_ORIGIN = "https://www.redhidrosurmedioambiente.es";
@@ -47,6 +50,18 @@ export const CARTAMA_RAIN = {
   stationId: "38",
   sensorId: "038P01",
   stationName: "RÍO GUADALHORCE (CÁRTAMA) (MA)",
+  quantity: "rain",
+  unit: "mm",
+  kind: "rain-hourly",
+  agrupacion: AGRUPACION_HOURLY,
+} as const;
+
+/** Málaga port / city core — the desk-square centre, not the Guadalhorce gauge. */
+export const FAROLA_RAIN = {
+  id: "farola-rain",
+  stationId: "22",
+  sensorId: "022P01",
+  stationName: "MÁLAGA - PASEO DE LA FAROLA (MA)",
   quantity: "rain",
   unit: "mm",
   kind: "rain-hourly",

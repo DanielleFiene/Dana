@@ -164,7 +164,7 @@ export const SQUARE_ANATOMY: readonly SquareAnatomy[] = [
     hotspotId: "malaga",
     when: "upstream-inflow",
     desk: "upstream-inflow",
-    note: "Hidrosur Cártama 038P01 77.3 mm on 13 Nov (Europe/Madrid) vs mix ~44 mm at the gauge / ~51 mm at the square — 1.8× short, not Magre 3×. Rain peak 12:00 on the 13th; 038R03 nivel peak 3.08 m at 10:00 on the 14th (~22 h). Local rain was not Turís-scale; the Guadalhorce still rose. Not grid-undercatch: the missing input is upstream stage/flow, not a lower rain threshold. ECMWF T−72 ~68 mm at the square vs 77 mm SAIH is one lead on one cell — not a rule. AROME is out of domain (south) — this square will never yield an AROME comparison row and does not increment inland-orographic.",
+    note: "Hidrosur Cártama 038P01 77.3 mm on 13 Nov (Europe/Madrid) vs mix ~44 mm at the gauge / ~51 mm at the square — 1.8× short, not Magre 3×. Farola 022P01 city-core 81.3 mm that day, peak hour 49.3 mm — same 24 h order as Cártama, not Turís-scale, does not reclassify as grid-undercatch. Rain peak at Cártama 12:00 on the 13th; 038R03 nivel peak 3.08 m at 10:00 on the 14th (~22 h). Local rain was not Turís-scale; the Guadalhorce still rose. Not grid-undercatch: the missing input is upstream stage/flow, not a lower rain threshold. ECMWF T−72 ~68 mm at the square vs 77 mm SAIH is one lead on one cell — not a rule. AROME is out of domain (south) — this square will never yield an AROME comparison row and does not increment inland-orographic.",
   },
 ];
 
@@ -173,7 +173,7 @@ export const CATCHMENT_HYPOTHESES = [
   "Burn scars can raise runoff for the same millimetres (hydrophobic ash, less canopy). That would make a riuada worse on the ground. It does not explain a 17 mm grid vs 180 mm Salou, and it does not explain a 6 mm Magre hangover painted as heavy storms.",
   "Treat fire as a possible catchment multiplier later (with maps + gauges), never as a reason to move T500, soil weight, and 22 mm with the same hand.",
   "SAIH later calibrates ECMWF ENS members. It is not a reason to fold AROME into the live mix.",
-  "Cártama Nov 2024 is upstream-inflow, not a burn-scar story and not a rain-slider. The ~22 h rain-to-stage lag is one catchment, one event.",
+  "Cártama Nov 2024 is upstream-inflow, not a burn-scar story and not a rain-slider. Farola 022P01 city-core rain that day is the same 24 h order as Cártama — not a reason to move the rain threshold. The ~22 h rain-to-stage lag is one catchment, one event.",
 ] as const;
 
 export function anatomyFor(

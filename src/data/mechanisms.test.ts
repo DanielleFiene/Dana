@@ -26,6 +26,8 @@ describe("upstream-inflow desk mechanism", () => {
     expect(row?.note).toContain("~22 h");
     expect(row?.note).toContain("one lead on one cell");
     expect(row?.note).toContain("never yield an AROME comparison");
+    expect(row?.note).toContain("022P01");
+    expect(row?.note).toContain("does not reclassify as grid-undercatch");
     expect(SQUARE_ANATOMY.some((a) => a.eventId === "2024-11-malaga" && a.desk === "grid-undercatch")).toBe(
       false,
     );

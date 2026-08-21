@@ -9,9 +9,12 @@ describe("Málaga SAIH lead contrast", () => {
       { place: "Málaga square", model: "desk-mix", analysisMm: 45, lead24Mm: 30, lead48Mm: 15, lead72Mm: 8 },
     ];
     const text = formatMalagaSaihContrast(rows);
-    expect(text).toContain("First SAIH figure used as a model-day referee");
+    expect(text).toContain("First SAIH figures used as a model-day referee");
     expect(text).toContain("Cártama SAIH");
     expect(text).toContain("Málaga square");
+    expect(text).toContain("022P01");
+    expect(text).toContain("81.3");
+    expect(text).toContain("does not reclassify");
     expect(text).toContain("out of domain on this square");
     expect(text).toContain("do not referee millimetres");
     expect(text).toContain("77.3");

@@ -1,0 +1,24 @@
+{
+  "id": "farola-rain",
+  "network": "hidrosur",
+  "not": "CHG",
+  "quantity": "rain",
+  "unit": "mm",
+  "kind": "rain-hourly",
+  "stationId": "22",
+  "sensorId": "022P01",
+  "stationName": "MÁLAGA - PASEO DE LA FAROLA (MA)",
+  "window": {
+    "kind": "labelled-event",
+    "from": "11/11/2024 00:00",
+    "to": "15/11/2024 23:59",
+    "timezone": "Europe/Madrid",
+    "eventId": "2024-11-malaga",
+    "comparableToModelDay": false
+  },
+  "fetchedAt": "2026-08-21T12:54:57.384Z",
+  "points": 120,
+  "sumMm": 100.9,
+  "stationCountOnForm": 177,
+  "note": "City-core pluvio for the labelled 13 Nov 2024 day. Not Cártama. Not a live harvest. Not wired into the desk score. Does not increment inland-orographic."
+}

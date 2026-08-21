@@ -101,7 +101,7 @@ export const DANA_EVENTS: readonly DanaEvent[] = [
     riuadaHotspotIds: ["malaga"],
     quietHotspotIds: [],
     notes:
-      "Squall line / MCS over the city and Axarquía. Guadalhorce evacuations and urban flooding. Desk mechanism: upstream-inflow (Cártama rain mild, stage peaked ~22 h later) — not grid-undercatch. South belt, always out of AROME France domain: no AROME comparison row, does not increment INLAND_AROME_RULE_MIN_CELLS. Other corridors that day stay unlabelled.",
+      "Squall line / MCS over the city and Axarquía. Guadalhorce evacuations and urban flooding. Desk mechanism: upstream-inflow (Cártama rain mild, stage peaked ~22 h later) — not grid-undercatch. Farola 022P01 city-core 24 h on 13 Nov is the same order as Cártama (not Magre-core). South belt, always out of AROME France domain: no AROME comparison row, does not increment INLAND_AROME_RULE_MIN_CELLS. Other corridors that day stay unlabelled.",
   },
   {
     id: "2023-09-murcia",

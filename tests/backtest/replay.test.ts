@@ -81,6 +81,8 @@ describe("DANA event replay (historical Open-Meteo)", () => {
     expect(suite.text).toContain("ECMWF IFS ENS");
     expect(suite.text).toContain("Cártama SAIH");
     expect(suite.text).toContain("77.3");
+    expect(suite.text).toContain("022P01");
+    expect(suite.text).toContain("81.3");
     expect(suite.text).toContain("038R03");
     expect(suite.text).toContain("comparable to a model calendar day");
     expect(suite.text).toContain("3.08");

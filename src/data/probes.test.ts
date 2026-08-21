@@ -3,7 +3,9 @@ import {
   CARTAMA_SAIH_FLOW,
   CARTAMA_SAIH_RAIN,
   CARTAMA_SAIH_STAGE,
+  FAROLA_SAIH_RAIN,
   formatCartamaObserved,
+  formatFarolaObserved,
   formatMagreObserved,
   MAGRE_CORE_OBSERVED,
   MAGRE_POYO_FLOW_AT_LOSS,
@@ -118,5 +120,30 @@ describe("Cártama Hidrosur probes", () => {
     expect(text).toContain("Not CHG");
     expect(text).toContain("22 h later");
     expect(text).toContain("not a routing rule");
+  });
+});
+
+describe("Farola Hidrosur probe", () => {
+  it("keeps city-core rain on its own label, same 24 h order as Cártama", () => {
+    expect(FAROLA_SAIH_RAIN.id).toBe("farola-rain");
+    expect(FAROLA_SAIH_RAIN.quantity).toBe("rain");
+    expect(FAROLA_SAIH_RAIN.code).toBe("022P01");
+    expect(FAROLA_SAIH_RAIN.window.comparableToModelDay).toBe(true);
+    expect(FAROLA_SAIH_RAIN.episode.comparableToModelDay).toBe(false);
+    expect(FAROLA_SAIH_RAIN.dayMm).toBe(81.3);
+    expect(FAROLA_SAIH_RAIN.peakHourMm).toBe(49.3);
+    expect(FAROLA_SAIH_RAIN.peakHourAtLocal).toBe("2024-11-13 14:00");
+    expect(FAROLA_SAIH_RAIN.episode.mm).toBe(100.9);
+    expect(FAROLA_SAIH_RAIN.id).not.toBe(CARTAMA_SAIH_RAIN.id);
+    expect(FAROLA_SAIH_RAIN.dayMm).toBeGreaterThan(70);
+    expect(FAROLA_SAIH_RAIN.dayMm).toBeLessThan(120);
+
+    const text = formatFarolaObserved();
+    expect(text).toContain("022P01");
+    expect(text).toContain("not Cártama");
+    expect(text).toContain("comparable to a model calendar day");
+    expect(text).toContain("does not reclassify");
+    expect(text).toContain("Do not mix with Cártama 038R03");
+    expect(text).toContain("Does not increment inland-orographic");
   });
 });

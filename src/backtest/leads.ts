@@ -1,6 +1,6 @@
 import { AROME_FRANCE } from "@/api/arome";
 import { fetchLeadPrecip, type LeadPrecip } from "@/api/historical";
-import { CHIVA, formatCartamaObserved, formatMagreObserved, PORTO_CRISTO, SAIH_CARTAMA, TURIS } from "@/data/probes";
+import { CHIVA, formatCartamaObserved, formatFarolaObserved, formatMagreObserved, PORTO_CRISTO, SAIH_CARTAMA, TURIS } from "@/data/probes";
 import { hotspotById } from "@/data/hotspots";
 import type { Coord } from "@/types/weather";
 
@@ -74,9 +74,10 @@ export async function fetchMalagaLeadContrast(date: string): Promise<NamedLead[]
 export function formatMalagaSaihContrast(rows: readonly NamedLead[]): string {
   const lines = [
     "Cártama SAIH vs Málaga desk square — previous-run millimetres on 13 Nov 2024 (analysis / T−24 / T−48 / T−72).",
-    "First SAIH figure used as a model-day referee (038P01 24 h Europe/Madrid vs model calendar day). Stage and flow from 038R03 do not referee millimetres.",
+    "First SAIH figures used as a model-day referee (038P01 catchment and 022P01 city-core, 24 h Europe/Madrid vs model calendar day). Stage and flow from 038R03 do not referee millimetres.",
     formatCartamaObserved(),
-    "Desk mechanism: upstream-inflow, not grid-undercatch. Mix ~1.8× short of 77 mm is a real millimetre error; the river still peaked from catchment inflow. A better rain model is the wrong fix.",
+    formatFarolaObserved(),
+    "Desk mechanism: upstream-inflow, not grid-undercatch. Mix ~1.8× short of 77 mm is a real millimetre error; the river still peaked from catchment inflow. Farola 81 mm that day is the same 24 h order — not Magre-core. A better rain model is the wrong fix.",
     "AROME is out of domain on this square (south). Empty AROME leads are out-of-domain, not a miss and not an inland/coast tally. Málaga / Almería / Gibraltar will never yield AROME comparison rows — inland-6 stays on labelled cells in the Valencia / Murcia / Catalonia corridors.",
     "ECMWF T−72 near the SAIH day-total on this square is one lead on one cell — not a rule until it repeats.",
   ];
