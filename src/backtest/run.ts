@@ -36,7 +36,7 @@ import {
 import { DANA_EVENTS, labelledDates, type DanaEvent } from "@/data/events";
 import { type RainSource } from "@/data/mechanisms";
 import { aromeCovers, HOTSPOTS, INLAND_AROME_RULE_MIN_CELLS } from "@/data/hotspots";
-import { TURIS } from "@/data/probes";
+import { TURIS, formatAlmeriaObserved } from "@/data/probes";
 import type { ForecastJson } from "@/api/schemas";
 import type { ScoredPlace } from "@/types/place";
 
@@ -225,6 +225,7 @@ export async function runDanaSuite(events: readonly DanaEvent[] = DANA_EVENTS): 
 
   text = `${text}\n\n${formatAromeCompare(deltas)}`;
   text = `${text}\n\nMallorca 28 Oct (island) and Almería 11 Nov / Málaga 13 Nov (south) are labelled. They do not increment inland-orographic (still 1 of ${INLAND_AROME_RULE_MIN_CELLS}). Málaga / Almería / Gibraltar are always out of the AROME France domain — no AROME comparison rows, so inland-6 stays on labelled cells in the Valencia / Murcia / Catalonia corridors.`;
+  text = `${text}\n\n${formatAlmeriaObserved()}`;
 
   return {
     reports,

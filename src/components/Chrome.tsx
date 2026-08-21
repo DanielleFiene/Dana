@@ -40,24 +40,11 @@ export function PlaceSearch({
 }) {
   const t = copy[lang];
   const [draft, setDraft] = useState<string | null>(null);
-  const [syncedName, setSyncedName] = useState(selectedName);
   const [hits, setHits] = useState<PlaceHit[]>([]);
   const [empty, setEmpty] = useState(false);
   const timerRef = useRef<number | null>(null);
   const seqRef = useRef(0);
-
-  if (selectedName !== syncedName) {
-    setSyncedName(selectedName);
-    setDraft(null);
-    setHits([]);
-    setEmpty(false);
-    seqRef.current += 1;
-    if (timerRef.current !== null) {
-      window.clearTimeout(timerRef.current);
-      timerRef.current = null;
-    }
-  }
-
+  const boxRef = useRef<HTMLDivElement>(null);
   const q = draft ?? selectedName;
 
   useEffect(() => {
@@ -65,6 +52,32 @@ export function PlaceSearch({
       if (timerRef.current !== null) window.clearTimeout(timerRef.current);
     };
   }, []);
+
+  useEffect(() => {
+    if (hits.length === 0 && !empty) return;
+    function onDoc(e: PointerEvent) {
+      if (boxRef.current?.contains(e.target as Node)) return;
+      seqRef.current += 1;
+      if (timerRef.current !== null) {
+        window.clearTimeout(timerRef.current);
+        timerRef.current = null;
+      }
+      setHits([]);
+      setEmpty(false);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key !== "Escape") return;
+      seqRef.current += 1;
+      setHits([]);
+      setEmpty(false);
+    }
+    document.addEventListener("pointerdown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("pointerdown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [hits.length, empty]);
 
   function clearTimer() {
     if (timerRef.current !== null) {
@@ -124,7 +137,7 @@ export function PlaceSearch({
   }
 
   return (
-    <div className="search-box">
+    <div className="search-box" ref={boxRef}>
       <form className="search-row" onSubmit={(e) => void run(e)}>
         <input
           type="search"

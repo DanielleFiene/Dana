@@ -2,7 +2,17 @@ import { mkdtemp, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, expect, it } from "vitest";
-import { CARTAMA_FLOW, CARTAMA_RAIN, CARTAMA_STAGE, CONFIRMED_ON_FORM, FAROLA_RAIN } from "@/saih/hidrosur/catalog";
+import {
+  ALMERIA_RAIN,
+  CARTAMA_FLOW,
+  CARTAMA_RAIN,
+  CARTAMA_STAGE,
+  CONFIRMED_ON_FORM,
+  FAROLA_RAIN,
+  GADOR_RAIN,
+  SKIPPED_NO_LABELLED_EVENT,
+} from "@/saih/hidrosur/catalog";
+import { findAlmeria, findGador, pullAlmeriaNov2024, writeAlmeriaFixture } from "@/saih/hidrosur/fetchAlmeria";
 import { findFarola, pullFarolaMalaga2024, writeFarolaFixture } from "@/saih/hidrosur/fetchFarola";
 import {
   CookieJar,
@@ -24,6 +34,8 @@ import {
   CARTAMA_SAIH_RAIN,
   CARTAMA_SAIH_STAGE,
   FAROLA_SAIH_RAIN,
+  ALMERIA_SAIH_RAIN,
+  GADOR_SAIH_RAIN,
 } from "@/data/probes";
 
 const SAMPLE_CSV = [
@@ -46,6 +58,20 @@ const SAMPLE_FAROLA_CSV = [
   "22;MÁLAGA - PASEO DE LA FAROLA (MA);022P01;13/11/2024 11:00;PLUVIÓMETRO;12,40",
   "22;MÁLAGA - PASEO DE LA FAROLA (MA);022P01;13/11/2024 12:00;PLUVIÓMETRO;8,10",
   "22;OTRA;999P01;13/11/2024 14:00;PLUVIÓMETRO;99,00",
+].join("\r");
+
+const SAMPLE_ALMERIA_CSV = [
+  "Estación;Nombre;Sensor;Fecha;Nombre;Acumulado (l/m2)",
+  "89;ALMERÍA (AL);089P01;11/11/2024 10:00;PLUVIÓMETRO;6,20",
+  "89;ALMERÍA (AL);089P01;11/11/2024 11:00;PLUVIÓMETRO;4,10",
+  "89;OTRA;999P01;11/11/2024 12:00;PLUVIÓMETRO;99,00",
+].join("\r");
+
+const SAMPLE_GADOR_CSV = [
+  "Estación;Nombre;Sensor;Fecha;Nombre;Acumulado (l/m2)",
+  "76;SIERRA DE GÁDOR (AL);076P01;11/11/2024 10:00;PLUVIÓMETRO;14,80",
+  "76;SIERRA DE GÁDOR (AL);076P01;11/11/2024 11:00;PLUVIÓMETRO;9,40",
+  "76;OTRA;999P01;11/11/2024 12:00;PLUVIÓMETRO;99,00",
 ].join("\r");
 
 describe("Hidrosur CSV parse", () => {
@@ -120,6 +146,13 @@ describe("Hidrosur catalog", () => {
     expect(FAROLA_RAIN.sensorId).toBe("022P01");
     expect(FAROLA_RAIN.stationId).toBe("22");
     expect(FAROLA_RAIN.quantity).toBe("rain");
+    expect(ALMERIA_RAIN.sensorId).toBe("089P01");
+    expect(ALMERIA_RAIN.stationId).toBe("89");
+    expect(GADOR_RAIN.sensorId).toBe("076P01");
+    expect(GADOR_RAIN.stationId).toBe("76");
+    expect(SKIPPED_NO_LABELLED_EVENT).toEqual(["011P01", "008P01", "003P01"]);
+    expect(CONFIRMED_ON_FORM.some((s) => s.sensorId === "089P01")).toBe(true);
+    expect(CONFIRMED_ON_FORM.some((s) => s.sensorId === "076P01")).toBe(true);
   });
 
   it("puts agrupacion and the Cártama sensor on the CSV URL", () => {
@@ -163,8 +196,16 @@ function mockClient(opts: {
     },
     async fetchCsvText(req) {
       if (opts.csvError) return { ok: false, kind: opts.csvError.kind, status: 200, error: opts.csvError.error };
-      const text = req.sensorId === CARTAMA_STAGE.sensorId ? (opts.nivelCsv ?? SAMPLE_NIVEL_CSV) : (opts.csv ?? SAMPLE_CSV);
-      return { ok: true, status: 200, value: text };
+      if (req.sensorId === CARTAMA_STAGE.sensorId) {
+        return { ok: true, status: 200, value: opts.nivelCsv ?? SAMPLE_NIVEL_CSV };
+      }
+      if (req.sensorId === ALMERIA_RAIN.sensorId) {
+        return { ok: true, status: 200, value: SAMPLE_ALMERIA_CSV };
+      }
+      if (req.sensorId === GADOR_RAIN.sensorId) {
+        return { ok: true, status: 200, value: SAMPLE_GADOR_CSV };
+      }
+      return { ok: true, status: 200, value: opts.csv ?? SAMPLE_CSV };
     },
     async fetchCsv(req) {
       const text = await this.fetchCsvText(req);
@@ -305,3 +346,72 @@ describe("Hidrosur Farola pull", () => {
     expect(episode).toBeCloseTo(FAROLA_SAIH_RAIN.episode.mm, 5);
   });
 });
+
+describe("Hidrosur Almería pull", () => {
+  const almeriaStations = parseParametros({
+    "89": {
+      nombre: "ALMERÍA (AL)",
+      subsistema: "III",
+      tipoestacion: ["M"],
+      sensores: ["089P01"],
+      nombres: ["PLUVIÓMETRO"],
+    },
+    "76": {
+      nombre: "SIERRA DE GÁDOR (AL)",
+      subsistema: "III",
+      tipoestacion: ["M"],
+      sensores: ["076P01"],
+      nombres: ["PLUVIÓMETRO"],
+    },
+  });
+
+  it("refuses to invent Almería or Gádor when the station is missing", async () => {
+    const miss = await pullAlmeriaNov2024(mockClient({}));
+    expect(miss.ok).toBe(false);
+    if (!miss.ok) expect(miss.kind).toBe("parse");
+    expect(findAlmeria([])).toBeUndefined();
+    expect(findGador([])).toBeUndefined();
+  });
+
+  it("writes city and Gádor rain fixtures without mixing Cártama or Farola ids", async () => {
+    const dir = await mkdtemp(join(tmpdir(), "hidrosur-almeria-"));
+    const pull = await pullAlmeriaNov2024(mockClient({ stations: almeriaStations }));
+    expect(pull.ok).toBe(true);
+    if (!pull.ok) return;
+    expect(pull.value.city.sensorId).toBe("089P01");
+    expect(pull.value.gador.sensorId).toBe("076P01");
+    expect(pull.value.city.points.map((p) => p.valor)).toEqual([6.2, 4.1]);
+    expect(pull.value.gador.points.map((p) => p.valor)).toEqual([14.8, 9.4]);
+    await writeAlmeriaFixture(dir, pull.value, "2026-08-21T15:00:00.000Z");
+    const city = await readFile(join(dir, "src/saih/hidrosur/fixtures/089P01-2024-11-almeria.jsonl"), "utf8");
+    const gador = await readFile(join(dir, "src/saih/hidrosur/fixtures/076P01-2024-11-almeria.jsonl"), "utf8");
+    expect(city).toContain("6.2");
+    expect(gador).toContain("14.8");
+    expect(city).not.toContain("99");
+    expect(gador).not.toContain("99");
+    expect(city).not.toContain("038P01");
+    expect(city).not.toContain("022P01");
+  });
+
+  it("keeps the labelled 11 Nov 2024 Almería hours on disk", async () => {
+    const cityRaw = await readFile(new URL("./fixtures/089P01-2024-11-almeria.jsonl", import.meta.url), "utf8");
+    const gadorRaw = await readFile(new URL("./fixtures/076P01-2024-11-almeria.jsonl", import.meta.url), "utf8");
+    const city = cityRaw
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as { fecha: string; valor: number | null; estado: null });
+    const gador = gadorRaw
+      .trim()
+      .split("\n")
+      .map((line) => JSON.parse(line) as { fecha: string; valor: number | null; estado: null });
+    expect(city).toHaveLength(120);
+    expect(gador).toHaveLength(120);
+    expect(sumOnMadridDate(city, "2024-11-11")).toBeCloseTo(ALMERIA_SAIH_RAIN.dayMm, 5);
+    expect(sumOnMadridDate(gador, "2024-11-11")).toBeCloseTo(GADOR_SAIH_RAIN.dayMm, 5);
+    const episodeDays = ["2024-11-09", "2024-11-10", "2024-11-11", "2024-11-12", "2024-11-13"];
+    expect(episodeDays.reduce((s, d) => s + sumOnMadridDate(city, d), 0)).toBeCloseTo(ALMERIA_SAIH_RAIN.episode.mm, 5);
+    expect(episodeDays.reduce((s, d) => s + sumOnMadridDate(gador, d), 0)).toBeCloseTo(GADOR_SAIH_RAIN.episode.mm, 5);
+    expect(peakOnMadridDate(gador, "2024-11-13")?.valor).toBeCloseTo(GADOR_SAIH_RAIN.peakHourMm, 5);
+  });
+});
+

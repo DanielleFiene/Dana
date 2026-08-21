@@ -1,4 +1,5 @@
-import type { Lang } from "@/types/lang";
+import { labelledSuiteUpdatedOn } from "@/data/events";
+import { localeFor, type Lang } from "@/types/lang";
 
 /** Hash for the method page. Bookmarkable; one click from the header. */
 export const METHOD_HASH = "#method";
@@ -296,7 +297,49 @@ const cs: MethodCopy = {
   },
 };
 
-export const methodCopy: Record<Lang, MethodCopy> = { ca, es, en, de, nl, cs };
+const LAST_UPDATED: Record<Lang, (date: string) => string> = {
+  ca: (d) => `Darrera actualització: ${d}`,
+  es: (d) => `Última actualización: ${d}`,
+  en: (d) => `Last updated: ${d}`,
+  de: (d) => `Zuletzt aktualisiert: ${d}`,
+  nl: (d) => `Laatst bijgewerkt: ${d}`,
+  cs: (d) => `Naposledy aktualizováno: ${d}`,
+};
+
+function formatSuiteDate(lang: Lang, iso: string): string {
+  const [y, m, d] = iso.split("-").map(Number);
+  if (!y || !m || !d) return iso;
+  const date = new Date(Date.UTC(y, m - 1, d, 12));
+  return new Intl.DateTimeFormat(localeFor(lang), {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function withSuiteDate(copy: MethodCopy, lang: Lang): MethodCopy {
+  const line = LAST_UPDATED[lang](formatSuiteDate(lang, labelledSuiteUpdatedOn()));
+  return {
+    ...copy,
+    sections: {
+      ...copy.sections,
+      tested: {
+        ...copy.sections.tested,
+        body: [...copy.sections.tested.body, line],
+      },
+    },
+  };
+}
+
+export const methodCopy: Record<Lang, MethodCopy> = {
+  ca: withSuiteDate(ca, "ca"),
+  es: withSuiteDate(es, "es"),
+  en: withSuiteDate(en, "en"),
+  de: withSuiteDate(de, "de"),
+  nl: withSuiteDate(nl, "nl"),
+  cs: withSuiteDate(cs, "cs"),
+};
 
 export function isMethodHash(hash = typeof window === "undefined" ? "" : window.location.hash): boolean {
   return hash === METHOD_HASH;

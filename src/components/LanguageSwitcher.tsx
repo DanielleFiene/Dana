@@ -27,19 +27,20 @@ export function LanguageSwitcher({
   const current = languageById(lang);
 
   useEffect(() => {
-    function onDoc(e: MouseEvent) {
+    if (!open) return;
+    function onDoc(e: PointerEvent) {
       if (!wrap.current?.contains(e.target as Node)) setOpen(false);
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === "Escape") setOpen(false);
     }
-    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("pointerdown", onDoc);
     document.addEventListener("keydown", onKey);
     return () => {
-      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("pointerdown", onDoc);
       document.removeEventListener("keydown", onKey);
     };
-  }, []);
+  }, [open]);
 
   return (
     <div className="lang-switch" ref={wrap}>
@@ -53,7 +54,7 @@ export function LanguageSwitcher({
         onClick={() => setOpen((v) => !v)}
       >
         <GlobeIcon />
-      <span className="lang-name">{current.native}</span>
+        <span className="lang-name">{current.native}</span>
       </button>
       {open ? (
         <ul className="lang-menu" id={menuId} role="listbox" aria-label={t.language}>

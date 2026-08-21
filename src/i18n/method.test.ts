@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { LANGS } from "@/types/lang";
+import { labelledSuiteUpdatedOn } from "@/data/events";
 import { isMethodHash, METHOD_HASH, METHOD_SECTION_IDS, methodCopy } from "@/i18n/method";
 
 describe("method copy", () => {
@@ -91,5 +92,17 @@ describe("method copy", () => {
     expect(isMethodHash("#method")).toBe(true);
     expect(isMethodHash("#desk")).toBe(false);
     expect(isMethodHash("")).toBe(false);
+  });
+
+  it("ends the tested section with the labelled-suite date from events.ts", () => {
+    const iso = labelledSuiteUpdatedOn();
+    expect(iso).toBe("2026-08-20");
+    for (const lang of LANGS) {
+      const last = methodCopy[lang].sections.tested.body.at(-1) ?? "";
+      expect(last).toMatch(/2026/);
+      expect(last.toLowerCase()).toMatch(/actualitz|actualiz|updated|aktualisiert|bijgewerkt|aktualizov/);
+    }
+    expect(methodCopy.nl.sections.tested.body.at(-1)).toMatch(/^Laatst bijgewerkt:/);
+    expect(methodCopy.en.sections.tested.body.at(-1)).toMatch(/^Last updated:/);
   });
 });

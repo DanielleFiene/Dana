@@ -8,7 +8,7 @@ import { HOTSPOTS } from "@/data/hotspots";
 import { VALENCIA_CENTER, VALENCIA_ZOOM } from "@/lib/spain";
 import type { ScoredPlace } from "@/api/pipeline";
 import { corridorFill } from "@/map/fill";
-import { SQUARE_PADDING, pinCamera, squareCamera } from "@/map/focus";
+import { SQUARE_PADDING, mergeInsets, overlayInset, pinCamera, squareCamera, ZERO_INSET } from "@/map/focus";
 
 setWorkerUrl(mapWorkerUrl);
 
@@ -48,6 +48,16 @@ function geojson(desk: ScoredPlace[], selectedId: string | null, selectedDate: s
       };
     }),
   };
+}
+
+function chromeOverlay(mapEl: HTMLElement) {
+  const map = mapEl.getBoundingClientRect();
+  let inset = { ...ZERO_INSET };
+  for (const el of document.querySelectorAll("[data-map-overlay]")) {
+    if (!(el instanceof HTMLElement)) continue;
+    inset = mergeInsets(inset, overlayInset(map, el.getBoundingClientRect()));
+  }
+  return inset;
 }
 
 export function MapView({
@@ -244,11 +254,12 @@ export function MapView({
       map.resize();
       map.setPadding({ ...SQUARE_PADDING });
       const box = map.getContainer();
+      const view = { width: box.clientWidth, height: box.clientHeight };
       const square =
         focusMode === "square" && hotspot
-          ? squareCamera(hotspot.polygon, { width: box.clientWidth, height: box.clientHeight })
+          ? squareCamera(hotspot.polygon, view)
           : null;
-      map.flyTo(square ?? pinCamera(pinLon, pinLat));
+      map.flyTo(square ?? pinCamera(pinLon, pinLat, view, chromeOverlay(box)));
     };
     if (map.isStyleLoaded()) frame();
     else map.once("load", frame);

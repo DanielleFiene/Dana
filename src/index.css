@@ -156,6 +156,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   min-width: 44px;
   min-height: 44px;
   padding: 0;
+  flex-shrink: 0;
 }
 
 .search-box {
@@ -179,6 +180,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: var(--radius);
   padding: 10px 12px;
+  min-height: 44px;
+  font-size: 16px;
 }
 
 .search-go {
@@ -206,6 +209,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   z-index: 20;
   max-height: min(50dvh, 320px);
   overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 6px;
   background: var(--glass);
   backdrop-filter: blur(16px);
@@ -232,7 +237,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius);
-  padding: 8px 10px;
+  padding: 10px 12px;
+  min-height: 44px;
   cursor: pointer;
 }
 
@@ -440,7 +446,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   margin-right: 6px;
 }
 
-.lang-switch { position: relative; }
+.lang-switch { position: relative; flex-shrink: 0; }
 .lang-btn {
   display: inline-flex;
   align-items: center;
@@ -463,6 +469,11 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   padding: 6px;
   list-style: none;
   min-width: 188px;
+  max-width: min(240px, calc(100vw - 24px));
+  max-height: min(70dvh, 24rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   background: var(--glass);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
@@ -477,7 +488,8 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   background: transparent;
   border: 0;
   border-radius: 6px;
-  padding: 8px 10px;
+  padding: 10px 12px;
+  min-height: 44px;
   cursor: pointer;
 }
 .lang-menu button:hover,
@@ -515,7 +527,7 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   font: inherit;
   font-size: 0.82rem;
   font-weight: 500;
-  min-height: 36px;
+  min-height: 44px;
 }
 .map-tool.on {
   border-color: var(--focus);
@@ -532,7 +544,12 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   padding: 10px 12px;
   background: rgba(255, 255, 255, 0.03);
 }
-.method summary { cursor: pointer; font-weight: 600; }
+.method summary {
+  cursor: pointer;
+  font-weight: 600;
+  min-height: 44px;
+  padding-block: 10px;
+}
 .method-body {
   margin-top: 8px;
   max-height: min(40vh, 22rem);
@@ -555,23 +572,60 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 @media (max-width: 960px) {
   .chrome-official { display: none; }
   .desk-official { display: block; }
+  .desk-official .top-actions {
+    display: flex;
+    flex-direction: column;
+  }
+  .desk-official .ghost {
+    min-height: 44px;
+    text-align: center;
+  }
 }
 
 @media (max-width: 720px) {
+  .app {
+    display: flex;
+    flex-direction: column;
+  }
+
   .chrome-top {
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
     gap: 6px;
+  }
+  .brand { order: 1; }
+  .chrome-top > .icon-btn { order: 2; margin-left: auto; }
+  .lang-switch { order: 3; }
+  .search-box {
+    order: 4;
+    flex: 1 1 100%;
   }
   .brand-text span { display: none; }
   .lang-btn .lang-name { display: none; }
   .lang-btn { min-width: 44px; padding: 8px; }
 
-  .chrome-desk {
-    top: auto;
-    left: 0;
-    right: 0;
-    bottom: 0;
+  .search-box .hits {
+    max-height: min(36dvh, 280px);
+  }
+
+  .map-wrap,
+  .app .map-wrap,
+  .app .map-wrap.maplibregl-map {
+    position: relative;
+    inset: auto;
+    flex: 1 1 0;
     width: 100%;
+    height: auto;
+    min-height: 0;
+  }
+
+  .chrome-desk {
+    position: relative;
+    top: auto;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    flex: 0 1 auto;
     max-height: 48dvh;
     border-radius: 14px 14px 0 0;
     padding: 8px 14px max(14px, env(safe-area-inset-bottom));
@@ -579,18 +633,36 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 
   .sheet-grip { display: block; }
 
+  .method-body {
+    max-height: none;
+    overflow: visible;
+  }
+
   .maplibregl-ctrl-bottom-right {
-    bottom: calc(48dvh + 6px);
+    bottom: 8px;
   }
 
   .map-tools {
     top: auto;
-    bottom: calc(48dvh + 8px);
+    bottom: 8px;
     right: max(10px, env(safe-area-inset-right));
   }
 
   .days { grid-template-columns: repeat(7, minmax(0, 1fr)); }
   .metrics { grid-template-columns: repeat(3, 1fr); }
+  .ghost, .solid, .lang-btn, .search-go, .icon-btn { min-height: 44px; }
+
+  .hours {
+    display: flex;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+    gap: 3px;
+  }
+  .hour {
+    flex: 0 0 16px;
+    min-width: 16px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -606,6 +678,4 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   .chrome-desk { max-height: 42dvh; }
   .metrics { display: none; }
   .hours { height: 40px; }
-  .map-tools,
-  .maplibregl-ctrl-bottom-right { bottom: calc(42dvh + 6px); }
 }

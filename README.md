@@ -123,12 +123,12 @@ There is no single SAIH API:
 | CHS | Segura | Live JSON / ArcGIS snapshot. History behind auth. |
 | ACA | Catalan coast | Documented Sentilo REST. Rolling window; 4 Nov 2024 empty. Tarragona square is ACA coast + CHE Ebro. |
 | CHE | Ebro | Separate from ACA. |
-| Hidrosur | Málaga / Almería / Campo de Gibraltar | Junta de Andalucía, **not** CHG. Undocumented POST+CSV (`ci_session`). Cártama `038P01` rain, `038R03` nivel/caudal, and Farola `022P01` rain for 11–15 Nov 2024 are on disk as one-shot fixtures. |
+| Hidrosur | Málaga / Almería / Campo de Gibraltar | Junta de Andalucía, **not** CHG. Undocumented POST+CSV (`ci_session`). Cártama `038P01` rain, `038R03` nivel/caudal, Farola `022P01` rain (11–15 Nov 2024), and Almería `089P01` + Gádor `076P01` rain (9–13 Nov 2024) are on disk as one-shot fixtures. Guadiaro / Guadarranque / Charco Redondo have no labelled event and were not fetched. |
 | Balears | Mallorca / Pitiusas | No confederación SAIH. |
 
 `npm run saih:chj` archives the Magre-corridor CHJ stations (Turís 7R04, Chiva 0P09, Utiel 0N01, Poyo N-III 0O04 rain + caudal) into `data/saih/chj/` as JSONL. Each run looks back 72 h so a missed pull still overlaps. It cannot recover Magre 2024 from the public JSON. Not wired into the live score. Cron: `*/2` hours, or `npm run saih:chj -- --loop`.
 
-`npm run saih:hidrosur` is a **one-shot** historical pull, not a cron: Cártama `038P01` hourly rain and `038R03` nivel (plus the caudal column on that same CSV), and Farola `022P01` city-core rain, for 11–15 Nov 2024 into `src/saih/hidrosur/fixtures/`. Same `{fecha, valor, estado}` rows as CHJ. Rain, stage and flow stay on three labels; Farola is rain only. Not a live score input. Other Hidrosur IDs stay unfetched until they reappear on the 177-station form.
+`npm run saih:hidrosur` is a **one-shot** historical pull, not a cron: Cártama `038P01` hourly rain and `038R03` nivel (plus the caudal column on that same CSV), Farola `022P01` city-core rain, for 11–15 Nov 2024, and Almería `089P01` + Sierra de Gádor `076P01` for 9–13 Nov 2024, into `src/saih/hidrosur/fixtures/`. Same `{fecha, valor, estado}` rows as CHJ. Rain, stage and flow stay on three labels; Farola and Almería are rain only. Not a live score input. Guadiaro `011P01`, Guadarranque `008P01` and Charco Redondo `003P01` stay unfetched: confirmed on the form, no labelled event.
 
 **Málaga 13 Nov 2024 — first SAIH model-day referee.** Hidrosur Cártama rain on 13 Nov (24 h Europe/Madrid) *is* comparable to a model calendar day. The 5-day 11–15 Nov sum is not. AROME is out of domain on this square. Stage/flow do not referee millimetres.
 
@@ -142,6 +142,14 @@ There is no single SAIH API:
 | Hidrosur | Cártama 038R03 caudal column | Same CSV, not the nivel series | 13 Nov max 210.2 m³/s; window peak **455.59 m³/s at the same 14 Nov 10:00 hour**. |
 
 Local rain at Cártama is not Magre-core. Farola (city core, near the desk-square centre) is the same 24 h order: 81.3 mm vs Cártama 77.3 mm — a sharper peak hour (49.3 mm vs 19.2 mm), not Turís-scale, so the square stays `upstream-inflow` and is **not** reclassified as `grid-undercatch`. The Guadalhorce still rose, peaking **~22 h after the Cártama rain peak** (12:00 on the 13th → 10:00 on the 14th). That lag is one catchment, one event — not a routing rule until another basin repeats it. Mix ~1.8× short of 77 mm is a real millimetre error; the missing input is upstream stage/flow. ECMWF T−72 ~68 mm at the square vs 77 mm SAIH is one lead on one cell — not a rule.
+
+**Almería 11 Nov 2024 — Hidrosur pins that missed the rambla cell.** City `089P01` and Sierra de Gádor `076P01` (Dalías, 2119 m) are the confirmed pluvios for that labelled day. Both are **0 mm on 11 Nov**. Gádor’s 4.1 mm episode-sum is 13 Nov, two days later. Poniente ramblas (Balanegra / Vícar / Dalías piedmont) were not these two pins. South belt, out of AROME, does not increment inland-orographic. Not a live score input.
+
+| Source | Station | Window | Figure |
+|---|---|---|---|
+| Hidrosur | Almería 089P01 rain | **24 h on 11 Nov 2024** (Europe/Madrid) | 0 mm. Comparable to a model day. City, not Poniente. |
+| Hidrosur | Gádor 076P01 rain | **24 h on 11 Nov 2024** (Europe/Madrid) | 0 mm. Summit, not the rambla foot. |
+| Hidrosur | Gádor 076P01 rain | Episode-sum **9–13 Nov** | 4.1 mm, all on the 13th (peak hour 1.7 mm). Not the model-day referee. |
 
 **Magre 2024 observed** is already in `src/data/probes.ts`. Two windows, never mixed, never compared to a single model-run day (`comparableToModelDay: false`):
 
@@ -184,6 +192,7 @@ An AROME-only false alarm is `hangover` or `leftover-rain` (or `unassigned`) —
 - Map: OpenStreetMap / CARTO. Live rain overlay: RainViewer (tiles to zoom 7).
 - Magre observed: AEMET Turís (peak-hours) and CHJ SAIH episode table as above.
 - Málaga 13 Nov 2024 observed: Hidrosur Cártama `038P01` rain, `038R03` nivel/caudal, and Farola `022P01` city-core rain (not CHG). 13 Nov rain is a model-day referee; stage peaks 14 Nov. Farola and Cártama 24 h totals are the same order.
+- Almería 11 Nov 2024 observed: Hidrosur `089P01` (city) and `076P01` (Gádor) — both 0 mm on the labelled day. Not the Poniente rambla core.
 
 ---
 
@@ -197,7 +206,7 @@ npm run saih:chj
 npm run saih:hidrosur
 ```
 
-http://localhost:5173 — Node 22+ (see `.nvmrc`). `npm run saih:chj` is one CHJ pull; add `-- --loop` to repeat every 2 hours. `npm run saih:hidrosur` re-fetches the Cártama and Farola Nov 2024 fixtures.
+http://localhost:5173 — Node 22+ (see `.nvmrc`). `npm run saih:chj` is one CHJ pull; add `-- --loop` to repeat every 2 hours. `npm run saih:hidrosur` re-fetches the Cártama, Farola and Almería Nov 2024 fixtures. `--almeria-only` skips Cártama/Farola.
 
 GitHub Pages: push, enable Pages from GitHub Actions. `BASE_PATH` follows the repo name. Workflow: `.github/workflows/ci.yml`.
 

@@ -35,6 +35,17 @@ const MAGRE_RIUADA = [...MAGRE_SQUARES, "malaga", "murcia"] as const;
  */
 const MAGRE_QUIET = ["mallorca", "pitiusas", "tarragona", "barcelona"] as const;
 
+/**
+ * ISO date DANA_EVENTS last gained a labelled event (2024-11-malaga).
+ * Method-page "last checked" reads this — same table as labelled-square counts.
+ * Refresh in the same edit that appends a row. Not a second book.
+ */
+export const LABELLED_SUITE_UPDATED_ON = "2026-08-20";
+
+export function labelledSuiteUpdatedOn(): string {
+  return LABELLED_SUITE_UPDATED_ON;
+}
+
 export const DANA_EVENTS: readonly DanaEvent[] = [
   {
     id: "2024-10-mallorca",
@@ -90,7 +101,7 @@ export const DANA_EVENTS: readonly DanaEvent[] = [
     riuadaHotspotIds: ["almeria"],
     quietHotspotIds: [],
     notes:
-      "Ramblas at Balanegra / Vícar / Dalías: A-7 cut, cars in the rambla de la Culebra, ~40 112 calls. South belt, outside AROME France domain — out-of-domain control, not inland-orographic, not an AROME skill score. Other corridors that day stay unlabelled.",
+      "Ramblas at Balanegra / Vícar / Dalías: A-7 cut, cars in the rambla de la Culebra, ~40 112 calls. Hidrosur 089P01 (city) and 076P01 (Gádor 2119 m) are 0 mm on the 11th; Gádor 4.1 mm on the 13th — Poniente ramblas were not those two pins. South belt, outside AROME France domain — out-of-domain control, not inland-orographic, not an AROME skill score. Other corridors that day stay unlabelled.",
   },
   {
     id: "2024-11-malaga",

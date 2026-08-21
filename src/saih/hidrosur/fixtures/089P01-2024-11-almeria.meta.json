@@ -1,0 +1,24 @@
+{
+  "id": "almeria-rain",
+  "network": "hidrosur",
+  "not": "CHG",
+  "quantity": "rain",
+  "unit": "mm",
+  "kind": "rain-hourly",
+  "stationId": "89",
+  "sensorId": "089P01",
+  "stationName": "ALMERÍA (AL)",
+  "window": {
+    "kind": "labelled-event",
+    "from": "09/11/2024 00:00",
+    "to": "13/11/2024 23:59",
+    "timezone": "Europe/Madrid",
+    "eventId": "2024-11-almeria",
+    "comparableToModelDay": false
+  },
+  "fetchedAt": "2026-08-21T16:09:37.675Z",
+  "points": 120,
+  "sumMm": 0,
+  "stationCountOnForm": 177,
+  "note": "City pluvio for the labelled 11 Nov 2024 Poniente rambla day. Not Sierra de Gádor. Not a live harvest. Not wired into the desk score. South belt, does not increment inland-orographic."
+}

@@ -236,7 +236,7 @@ export function App() {
         />
       </Suspense>
 
-      <header className="chrome-top">
+      <header className="chrome-top" data-map-overlay>
         <div className="brand">
           <img
             className="brand-logo"
@@ -251,6 +251,7 @@ export function App() {
           </div>
         </div>
         <PlaceSearch
+          key={active?.place.id ?? "empty"}
           lang={lang}
           selectedName={active?.place.name ?? ""}
           onPick={(hit) => {
@@ -273,7 +274,7 @@ export function App() {
         <LanguageSwitcher lang={lang} onChange={switchLang} />
       </header>
 
-      <section className="chrome-desk">
+      <section className="chrome-desk" data-map-overlay>
         <div className="sheet-grip" aria-hidden="true" />
         {failed ? (
           <div className="warn">

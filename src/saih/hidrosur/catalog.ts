@@ -5,12 +5,12 @@
  * Undocumented CodeIgniter portal. Same risk class as CHJ: a redesign
  * can break the CSV path. Fail loudly (session vs empty vs HTML vs 404).
  *
- * 038P01 (Cártama pluvio), 038R03 (nivel CSV, which also carries a caudal
- * column) and 022P01 (Farola pluvio) are the harvest targets for the
- * labelled 13 Nov 2024 window. Farola is the Málaga city-core millimetre
- * check; Cártama is the Guadalhorce catchment. Other IDs below were seen
- * on the form and are not fetched. 038R03 nivel and 038R03 caudal are
- * different quantities.
+ * Harvest targets, all one-shot labelled windows:
+ * - 038P01 / 038R03 / 022P01 — Málaga 13 Nov 2024 (Cártama catchment + Farola city-core)
+ * - 089P01 / 076P01 — Almería 11 Nov 2024 (city + Sierra de Gádor / Dalías)
+ * 038R03 nivel and 038R03 caudal are different quantities. 011P01 / 008P01 /
+ * 003P01 (Guadiaro / Guadarranque / Charco Redondo) are confirmed on the form
+ * but have no labelled event — not fetched, no invented window.
  */
 
 export const HIDROSUR_ORIGIN = "https://www.redhidrosurmedioambiente.es";
@@ -76,6 +76,41 @@ export const MALAGA_2024_WINDOW = {
   eventId: "2024-11-malaga",
 } as const;
 
+/** Almería city — Levante/port, not the Poniente rambla foot. */
+export const ALMERIA_RAIN = {
+  id: "almeria-rain",
+  stationId: "89",
+  sensorId: "089P01",
+  stationName: "ALMERÍA (AL)",
+  quantity: "rain",
+  unit: "mm",
+  kind: "rain-hourly",
+  agrupacion: AGRUPACION_HOURLY,
+} as const;
+
+/** Sierra de Gádor (Dalías) — orographic pluvio above the Poniente ramblas. */
+export const GADOR_RAIN = {
+  id: "gador-rain",
+  stationId: "76",
+  sensorId: "076P01",
+  stationName: "SIERRA DE GÁDOR (AL)",
+  quantity: "rain",
+  unit: "mm",
+  kind: "rain-hourly",
+  agrupacion: AGRUPACION_HOURLY,
+} as const;
+
+/** Inclusive Europe/Madrid wall times around the labelled 11 Nov 2024 ramblas. */
+export const ALMERIA_2024_WINDOW = {
+  fromLocal: "09/11/2024 00:00",
+  toLocal: "13/11/2024 23:59",
+  peakDate: "2024-11-11",
+  eventId: "2024-11-almeria",
+} as const;
+
+/** Confirmed on the form; no labelled Gibraltar/Campo event in DANA_EVENTS. */
+export const SKIPPED_NO_LABELLED_EVENT = ["011P01", "008P01", "003P01"] as const;
+
 export type ConfirmedSensor = {
   stationId: string;
   name: string;
@@ -87,7 +122,7 @@ export type ConfirmedSensor = {
 
 /**
  * Corridor-relevant sensors read from the 177-station form.
- * Confirmed, not fetched — do not treat as a harvest list.
+ * Confirmed IDs — not a harvest list. Fetched only when a labelled event exists.
  */
 export const CONFIRMED_ON_FORM: readonly ConfirmedSensor[] = [
   { stationId: "38", name: "RÍO GUADALHORCE (CÁRTAMA) (MA)", province: "MA", sensorId: "038P01", sensorName: "PLUVIÓMETRO", letter: "P" },

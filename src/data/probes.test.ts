@@ -4,6 +4,9 @@ import {
   CARTAMA_SAIH_RAIN,
   CARTAMA_SAIH_STAGE,
   FAROLA_SAIH_RAIN,
+  ALMERIA_SAIH_RAIN,
+  GADOR_SAIH_RAIN,
+  formatAlmeriaObserved,
   formatCartamaObserved,
   formatFarolaObserved,
   formatMagreObserved,
@@ -144,6 +147,27 @@ describe("Farola Hidrosur probe", () => {
     expect(text).toContain("comparable to a model calendar day");
     expect(text).toContain("does not reclassify");
     expect(text).toContain("Do not mix with Cártama 038R03");
+    expect(text).toContain("Does not increment inland-orographic");
+  });
+});
+
+describe("Almería Hidrosur probes", () => {
+  it("records city and Gádor as dry on the labelled 11 Nov day", () => {
+    expect(ALMERIA_SAIH_RAIN.code).toBe("089P01");
+    expect(GADOR_SAIH_RAIN.code).toBe("076P01");
+    expect(ALMERIA_SAIH_RAIN.dayMm).toBe(0);
+    expect(GADOR_SAIH_RAIN.dayMm).toBe(0);
+    expect(ALMERIA_SAIH_RAIN.window.comparableToModelDay).toBe(true);
+    expect(GADOR_SAIH_RAIN.episode.mm).toBe(4.1);
+    expect(GADOR_SAIH_RAIN.peakHourMm).toBe(1.7);
+    expect(GADOR_SAIH_RAIN.peakHourAtLocal).toBe("2024-11-13 13:00");
+    expect(ALMERIA_SAIH_RAIN.id).not.toBe(GADOR_SAIH_RAIN.id);
+
+    const text = formatAlmeriaObserved();
+    expect(text).toContain("089P01");
+    expect(text).toContain("076P01");
+    expect(text).toContain("not Poniente");
+    expect(text).toContain("comparable to a model calendar day");
     expect(text).toContain("Does not increment inland-orographic");
   });
 });

@@ -136,6 +136,10 @@ export const POYO_N3_CAUDAL = {
 export const SAIH_CARTAMA: Coord = { lat: 36.737, lon: -4.632 };
 /** Málaga port promenade — city core, near the desk-square centre. */
 export const SAIH_FAROLA: Coord = { lat: 36.716, lon: -4.415 };
+/** Hidrosur 89 ALMERÍA — UTM 30N 553224 / 4076784 from the ficha, WGS84. */
+export const SAIH_ALMERIA: Coord = { lat: 36.8354, lon: -2.4031 };
+/** Hidrosur 76 SIERRA DE GÁDOR (Dalías, 2119 m) — UTM 30N 517689 / 4081616. */
+export const SAIH_GADOR: Coord = { lat: 36.8803, lon: -2.8015 };
 
 /**
  * Hidrosur Cártama pluvio. 24 h Europe/Madrid on the labelled 13 Nov day
@@ -257,10 +261,86 @@ export function formatCartamaObserved(): string {
   ].join("\n");
 }
 
+/**
+ * Hidrosur Almería city pluvio. 24 h on the labelled 11 Nov day *is*
+ * comparable to a model calendar day. The series is all zeros that day:
+ * Poniente ramblas (Balanegra / Vícar / Dalías) were not this pin.
+ * Not CHG. Not Sierra de Gádor.
+ */
+export const ALMERIA_SAIH_RAIN = {
+  id: "almeria-rain",
+  quantity: "rain" as const,
+  source: "hidrosur",
+  name: "Almería",
+  code: "089P01",
+  coord: SAIH_ALMERIA,
+  window: {
+    kind: "hourly-day" as const,
+    hours: 24,
+    date: "2024-11-11",
+    timezone: "Europe/Madrid",
+    comparableToModelDay: true,
+  },
+  episode: {
+    kind: "episode-sum" as const,
+    days: 5,
+    from: "2024-11-09 00:00",
+    to: "2024-11-13 23:59",
+    timezone: "Europe/Madrid",
+    comparableToModelDay: false,
+    mm: 0,
+  },
+  dayMm: 0,
+  peakHourMm: 0,
+  peakHourAtLocal: null,
+  note: "City gauge dry on the labelled Poniente day. Not the rambla core. Does not increment inland-orographic.",
+} as const;
+
+/**
+ * Hidrosur Sierra de Gádor pluvio (Dalías municipality, 2119 m).
+ * 24 h on 11 Nov is 0 mm — the 4.1 mm episode-sum is 13 Nov, two days later.
+ * Piedmont ramblas were not this summit pin.
+ */
+export const GADOR_SAIH_RAIN = {
+  id: "gador-rain",
+  quantity: "rain" as const,
+  source: "hidrosur",
+  name: "Sierra de Gádor",
+  code: "076P01",
+  coord: SAIH_GADOR,
+  window: {
+    kind: "hourly-day" as const,
+    hours: 24,
+    date: "2024-11-11",
+    timezone: "Europe/Madrid",
+    comparableToModelDay: true,
+  },
+  episode: {
+    kind: "episode-sum" as const,
+    days: 5,
+    from: "2024-11-09 00:00",
+    to: "2024-11-13 23:59",
+    timezone: "Europe/Madrid",
+    comparableToModelDay: false,
+    mm: 4.1,
+  },
+  dayMm: 0,
+  peakHourMm: 1.7,
+  peakHourAtLocal: "2024-11-13 13:00",
+  note: "Summit pluvio. 11 Nov dry; leftover 4.1 mm on the 13th. Not the Poniente rambla core. Does not increment inland-orographic.",
+} as const;
+
 export function formatFarolaObserved(): string {
   return [
     `Hidrosur Farola ${FAROLA_SAIH_RAIN.code} rain (Málaga city core, not Cártama): ${FAROLA_SAIH_RAIN.dayMm} mm in ${FAROLA_SAIH_RAIN.window.hours} h on ${FAROLA_SAIH_RAIN.window.date} (Europe/Madrid). Peak hour ${FAROLA_SAIH_RAIN.peakHourMm} mm at ${FAROLA_SAIH_RAIN.peakHourAtLocal}. This 24 h sum is comparable to a model calendar day. Same order as Cártama ${CARTAMA_SAIH_RAIN.dayMm} mm — not Magre-core, does not reclassify the square as grid-undercatch.`,
     `${FAROLA_SAIH_RAIN.episode.days}-day episode-sum is ${FAROLA_SAIH_RAIN.episode.mm} mm. Do not mix with Cártama 038R03 stage/flow. Not CHG. Not wired into the live score. Does not increment inland-orographic.`,
+  ].join("\n");
+}
+
+export function formatAlmeriaObserved(): string {
+  return [
+    `Hidrosur Almería ${ALMERIA_SAIH_RAIN.code} rain (city, not Poniente): ${ALMERIA_SAIH_RAIN.dayMm} mm in ${ALMERIA_SAIH_RAIN.window.hours} h on ${ALMERIA_SAIH_RAIN.window.date} (Europe/Madrid). This 24 h sum is comparable to a model calendar day. Dry at this pin — Balanegra / Vícar / Dalías ramblas were not the city gauge.`,
+    `Hidrosur Sierra de Gádor ${GADOR_SAIH_RAIN.code} (Dalías, 2119 m, not the city): ${GADOR_SAIH_RAIN.dayMm} mm on ${GADOR_SAIH_RAIN.window.date}. Episode-sum ${GADOR_SAIH_RAIN.episode.mm} mm fell on the 13th (peak hour ${GADOR_SAIH_RAIN.peakHourMm} mm at ${GADOR_SAIH_RAIN.peakHourAtLocal}) — two days after the labelled rambla day. Summit missed the cell. Not CHG. Not wired into the live score. Does not increment inland-orographic.`,
   ].join("\n");
 }
 

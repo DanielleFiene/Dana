@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { SQUARE_MAX_ZOOM, SQUARE_MIN_ZOOM, SQUARE_PADDING, pinCamera, projectOnCamera, squareCamera, squareFocus } from "@/map/focus";
+import { SQUARE_MAX_ZOOM, SQUARE_MIN_ZOOM, SQUARE_PADDING, mergeInsets, overlayInset, pinCamera, pinOffset, projectOnCamera, squareCamera, squareFocus, ZERO_INSET } from "@/map/focus";
 
 const valencia = [
   [-0.65, 39.62] as const,
@@ -83,5 +83,67 @@ describe("pinCamera", () => {
     expect(cam.center).toEqual([4.9, 52.37]);
     expect(cam.offset).toEqual([0, 0]);
     expect(cam.zoom).toBeGreaterThan(7);
+  });
+
+  it("shifts right of a left info desk so the pin is not under the panel", () => {
+    const overlay = { left: 412, right: 0, top: 0, bottom: 0 };
+    const wide = { width: 1200, height: 800 };
+    const cam = pinCamera(4.9, 52.37, wide, overlay);
+    expect(cam.offset[0]).toBeCloseTo(206);
+    expect(cam.offset[1]).toBe(0);
+    const at = projectOnCamera(4.9, 52.37, cam, wide);
+    expect(at.x).toBeCloseTo((wide.width + overlay.left) / 2, 5);
+    expect(at.y).toBeCloseTo(wide.height / 2, 5);
+  });
+
+  it("shifts up from a bottom info sheet that covers the map", () => {
+    const overlay = { left: 0, right: 0, top: 0, bottom: 400 };
+    const phone = { width: 390, height: 844 };
+    const cam = pinCamera(-0.38, 39.47, phone, overlay);
+    expect(cam.offset[0]).toBe(0);
+    expect(cam.offset[1]).toBeCloseTo(-200);
+    const at = projectOnCamera(-0.38, 39.47, cam, phone);
+    expect(at.x).toBeCloseTo(phone.width / 2, 5);
+    expect(at.y).toBeCloseTo((phone.height - overlay.bottom) / 2, 5);
+  });
+});
+
+describe("overlayInset", () => {
+  it("treats the desktop desk as left padding, not as part of the centre", () => {
+    const map = { left: 0, top: 0, right: 1400, bottom: 900 };
+    const desk = { left: 12, top: 72, right: 412, bottom: 876 };
+    expect(overlayInset(map, desk)).toEqual({ ...ZERO_INSET, left: 412 });
+  });
+
+  it("treats an overlapping bottom sheet as bottom padding", () => {
+    const map = { left: 0, top: 0, right: 390, bottom: 844 };
+    const sheet = { left: 0, top: 440, right: 390, bottom: 844 };
+    expect(overlayInset(map, sheet)).toEqual({ ...ZERO_INSET, bottom: 404 });
+  });
+
+  it("ignores a desk that sits below the map pane", () => {
+    const map = { left: 0, top: 0, right: 390, bottom: 440 };
+    const desk = { left: 0, top: 440, right: 390, bottom: 844 };
+    expect(overlayInset(map, desk)).toEqual(ZERO_INSET);
+  });
+
+  it("treats a top chrome strip as top padding", () => {
+    const map = { left: 0, top: 0, right: 390, bottom: 440 };
+    const top = { left: 0, top: 0, right: 390, bottom: 88 };
+    expect(overlayInset(map, top)).toEqual({ ...ZERO_INSET, top: 88 });
+  });
+});
+
+describe("pinOffset", () => {
+  it("is zero when the desk is already out of the map", () => {
+    expect(pinOffset({ width: 390, height: 440 }, ZERO_INSET)).toEqual([0, 0]);
+  });
+});
+
+describe("mergeInsets", () => {
+  it("keeps the left desk and a top strip together", () => {
+    expect(
+      mergeInsets({ ...ZERO_INSET, left: 412 }, { ...ZERO_INSET, top: 72 }),
+    ).toEqual({ top: 72, bottom: 0, left: 412, right: 0 });
   });
 });

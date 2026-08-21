@@ -13,6 +13,12 @@ export const SQUARE_DURATION = 650;
 export const SQUARE_PADDING = { top: 0, bottom: 0, left: 0, right: 0 } as const;
 
 export type Viewport = { width: number; height: number };
+export type OverlayInset = { top: number; bottom: number; left: number; right: number };
+export type OverlayRect = { left: number; top: number; right: number; bottom: number };
+export const ZERO_INSET: OverlayInset = { top: 0, bottom: 0, left: 0, right: 0 };
+/** Keep this much map free after an overlay inset so the pin has somewhere to sit. */
+const MIN_VISIBLE = 96;
+
 export type SquareCamera = {
   center: [number, number];
   zoom: number;
@@ -99,28 +105,83 @@ export function squareCamera(ring: ReadonlyArray<LngLat>, view: Viewport): Squar
 export function projectOnCamera(
   lng: number,
   lat: number,
-  camera: { center: readonly [number, number]; zoom: number },
+  camera: { center: readonly [number, number]; zoom: number; offset?: readonly [number, number] },
   view: Viewport,
 ): { x: number; y: number } {
   const { width, height } = finiteViewport(view);
   const world = WORLD_Z0 * 2 ** camera.zoom;
   const xOf = (lon: number) => ((lon + 180) / 360) * world;
   const yOf = (la: number) => mercatorY(la) * world;
+  const ox = camera.offset?.[0] ?? 0;
+  const oy = camera.offset?.[1] ?? 0;
   return {
-    x: width / 2 + (xOf(lng) - xOf(camera.center[0])),
-    y: height / 2 + (yOf(lat) - yOf(camera.center[1])),
+    x: width / 2 + ox + (xOf(lng) - xOf(camera.center[0])),
+    y: height / 2 + oy + (yOf(lat) - yOf(camera.center[1])),
   };
 }
 
-/** GPS / search: put that point in the middle of the map, not the surrounding square. */
+function intersectRect(a: OverlayRect, b: OverlayRect): OverlayRect | null {
+  const left = Math.max(a.left, b.left);
+  const top = Math.max(a.top, b.top);
+  const right = Math.min(a.right, b.right);
+  const bottom = Math.min(a.bottom, b.bottom);
+  if (right - left <= 1 || bottom - top <= 1) return null;
+  return { left, top, right, bottom };
+}
+
+/**
+ * How much of the map pane is covered by the info desk, as edge padding.
+ * Picks the one-sided inset that leaves the largest remaining rectangle —
+ * left card on desktop, bottom sheet when that sheet actually overlaps the map.
+ * No overlap → zeros: a desk below the map (phone column) is already out of the pane.
+ */
+export function overlayInset(map: OverlayRect, overlay: OverlayRect): OverlayInset {
+  const hit = intersectRect(map, overlay);
+  if (!hit) return { ...ZERO_INSET };
+  const mapW = Math.max(1, map.right - map.left);
+  const mapH = Math.max(1, map.bottom - map.top);
+  const fromLeft = hit.right - map.left;
+  const fromRight = map.right - hit.left;
+  const fromTop = hit.bottom - map.top;
+  const fromBottom = map.bottom - hit.top;
+  const options: Array<{ inset: OverlayInset; area: number }> = [
+    { inset: { ...ZERO_INSET, left: fromLeft }, area: Math.max(0, mapW - fromLeft) * mapH },
+    { inset: { ...ZERO_INSET, right: fromRight }, area: Math.max(0, mapW - fromRight) * mapH },
+    { inset: { ...ZERO_INSET, top: fromTop }, area: mapW * Math.max(0, mapH - fromTop) },
+    { inset: { ...ZERO_INSET, bottom: fromBottom }, area: mapW * Math.max(0, mapH - fromBottom) },
+  ];
+  const best = options.reduce((a, b) => (a.area >= b.area ? a : b));
+  return best.area <= 0 ? { ...ZERO_INSET } : best.inset;
+}
+
+export function mergeInsets(a: OverlayInset, b: OverlayInset): OverlayInset {
+  return {
+    top: Math.max(a.top, b.top),
+    bottom: Math.max(a.bottom, b.bottom),
+    left: Math.max(a.left, b.left),
+    right: Math.max(a.right, b.right),
+  };
+}
+
+/** Pixel offset that puts a point in the middle of the map that the info desk does not cover. */
+export function pinOffset(view: Viewport, overlay: OverlayInset): [number, number] {
+  const { width, height } = finiteViewport(view);
+  const left = Math.min(Math.max(0, overlay.left), Math.max(0, width - MIN_VISIBLE));
+  const right = Math.min(Math.max(0, overlay.right), Math.max(0, width - MIN_VISIBLE - left));
+  const top = Math.min(Math.max(0, overlay.top), Math.max(0, height - MIN_VISIBLE));
+  const bottom = Math.min(Math.max(0, overlay.bottom), Math.max(0, height - MIN_VISIBLE - top));
+  return [(left - right) / 2, (top - bottom) / 2];
+}
+
+/** GPS / search: that point in the middle of the visible map, not under the info desk. */
 export const PIN_ZOOM = 7.6;
 
-export function pinCamera(lng: number, lat: number) {
+export function pinCamera(lng: number, lat: number, view?: Viewport, overlay?: OverlayInset) {
   return {
     center: [lng, lat] as [number, number],
     zoom: PIN_ZOOM,
     duration: SQUARE_DURATION,
     essential: true as const,
-    offset: [0, 0] as [0, 0],
+    offset: view && overlay ? pinOffset(view, overlay) : ([0, 0] as [number, number]),
   };
 }
