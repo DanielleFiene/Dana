@@ -6,5 +6,13 @@
   "background_color": "#101613",
   "theme_color": "#101613",
   "lang": "es",
-  "description": "Riesgo DANA e inundación relámpago a 7 días para España. No oficial."
+  "description": "Riesgo DANA e inundación relámpago a 7 días para España. No oficial.",
+  "icons": [
+    {
+      "src": "./vortex.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
 }

@@ -1,14 +1,12 @@
-import { copy } from "@/i18n/copy";
+import { methodCopy } from "@/i18n/method";
 import type { Lang } from "@/types/lang";
 
 export function MethodPanel({ lang }: { lang: Lang }) {
-  const t = copy[lang];
+  const t = methodCopy[lang];
   return (
     <details className="method">
-      <summary>{t.methodTitle}</summary>
-      <p>{t.methodLead}</p>
-      <p>{t.methodFormula}</p>
-      <p>{t.methodWhyGate}</p>
+      <summary>{t.nav}</summary>
+      <p>{t.lead}</p>
     </details>
   );
 }

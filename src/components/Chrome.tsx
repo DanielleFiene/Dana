@@ -1,10 +1,19 @@
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { searchPlaces } from "@/api/geocoding";
 import { copy } from "@/i18n/copy";
 import { AEMET_WARNINGS_URL, PROTECCION_CIVIL_URL } from "@/lib/spain";
 import { RISK_LEVELS, RISK_META } from "@/types/risk";
 import type { Lang } from "@/types/lang";
 import type { PlaceHit, SavedPlace } from "@/types/place";
+
+function SearchIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M15.5 15.5 21 21" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
 
 export function OfficialLinks({ lang }: { lang: Lang }) {
   const t = copy[lang];
@@ -31,18 +40,69 @@ export function PlaceSearch({
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<PlaceHit[]>([]);
   const [empty, setEmpty] = useState(false);
+  const skipSuggest = useRef(false);
+
+  function choose(hit: PlaceHit) {
+    skipSuggest.current = true;
+    setQ(hit.name);
+    setHits([]);
+    setEmpty(false);
+    onPick(hit);
+  }
+
+  async function lookup(query: string) {
+    try {
+      const found = await searchPlaces(query, lang);
+      setHits(found);
+      setEmpty(found.length === 0);
+    } catch {
+      setHits([]);
+      setEmpty(true);
+    }
+  }
+
+  useEffect(() => {
+    if (skipSuggest.current) {
+      skipSuggest.current = false;
+      return;
+    }
+    const trimmed = q.trim();
+    if (trimmed.length < 2) {
+      setHits([]);
+      setEmpty(false);
+      return;
+    }
+    let cancelled = false;
+    const timer = window.setTimeout(() => {
+      void (async () => {
+        try {
+          const found = await searchPlaces(trimmed, lang);
+          if (cancelled) return;
+          setHits(found);
+          setEmpty(found.length === 0);
+        } catch {
+          if (cancelled) return;
+          setHits([]);
+          setEmpty(true);
+        }
+      })();
+    }, 280);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [q, lang]);
 
   async function run(e: FormEvent) {
     e.preventDefault();
-    const found = await searchPlaces(q, lang);
-    setHits(found);
-    setEmpty(found.length === 0);
+    await lookup(q);
   }
 
   return (
     <div>
-      <form className="search-row" onSubmit={run}>
+      <form className="search-row" onSubmit={(e) => void run(e)}>
         <input
+          type="search"
           value={q}
           onChange={(ev) => setQ(ev.target.value)}
           placeholder={t.search}
@@ -50,22 +110,15 @@ export function PlaceSearch({
           autoComplete="off"
           spellCheck={false}
         />
-        <button className="solid" type="submit">
-          OK
+        <button className="solid search-go" type="submit" aria-label={t.search}>
+          <SearchIcon />
         </button>
       </form>
       {empty ? <p className="hero-kicker">{t.emptySearch}</p> : null}
       <ul className="hits">
         {hits.map((h) => (
           <li key={h.id}>
-            <button
-              type="button"
-              onClick={() => {
-                onPick(h);
-                setHits([]);
-                setQ(h.name);
-              }}
-            >
+            <button type="button" onClick={() => choose(h)}>
               {h.name}
               {h.region ? ` · ${h.region}` : ""}
             </button>

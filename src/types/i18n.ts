@@ -46,10 +46,6 @@ export type Copy = {
   radar: string;
   radarHint: string;
   shockHelp: string;
-  methodTitle: string;
-  methodLead: string;
-  methodFormula: string;
-  methodWhyGate: string;
   levels: Record<RiskLevel, LevelCopy>;
   indicator: Record<FactorKey, string>;
   indicatorHelp: Record<FactorKey, string>;

@@ -212,8 +212,17 @@ export function App() {
     <div className="app">
       <header className="top">
         <div className="brand">
-          <strong>{t.title}</strong>
-          <span>{t.tag}</span>
+          <img
+            className="brand-logo"
+            src={`${import.meta.env.BASE_URL}vortex.png`}
+            alt=""
+            width={32}
+            height={32}
+          />
+          <div className="brand-text">
+            <strong>{t.title}</strong>
+            <span>{t.tag}</span>
+          </div>
         </div>
         <OfficialLinks lang={lang} />
         <LanguageSwitcher lang={lang} onChange={switchLang} />
@@ -238,7 +247,7 @@ export function App() {
           <SavedList
             lang={lang}
             places={saved}
-            onPick={(p) => void selectPlace(placeFromCoord(p.id, p.name, p.lat, p.lon))}
+            onPick={(p) => void selectPlace(placeFromCoord(p.id, p.name, p.lat, p.lon), !inSpainAutoLocate(p.lat, p.lon))}
             onRemove={(id) => {
               const next = saved.filter((p) => p.id !== id);
               setSaved(next);
@@ -295,6 +304,11 @@ export function App() {
 
       <footer className="foot">
         <p>{t.disclaimer.replace("{n}", String(HOTSPOTS.length))}</p>
+        <p>
+          <a href="https://www.flaticon.com/free-icons/vortex" title="vortex icons" target="_blank" rel="noopener noreferrer">
+            Vortex icons created by Magnific - Flaticon
+          </a>
+        </p>
       </footer>
     </div>
   );

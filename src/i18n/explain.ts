@@ -21,51 +21,6 @@ export const SHOCK_HELP: Record<Lang, string> = {
   cs: "Rozdíl zem minus ~5 500 m. Kolem 36 °C je běžné. Od ~52 °C může vzduch stoupat rychle, je-li vlhko. V noci nebo při vedru bez studeného jádra zůstane 0.",
 };
 
-export const METHOD: Record<Lang, { title: string; lead: string; formula: string; why: string }> = {
-  ca: {
-    title: "Com es calcula",
-    lead: "Cada hora té el seu color. Tira i mapa: el dia en conjunt. Un ruixat groc d’una hora no pinta el dia. Vermell = tempestes fortes. Porpra = risc de riuada.",
-    formula:
-      "Dos blocs. Gota freda: aire fred dalt, aigua en columna, mar calenta, vent de mar. Impacte: pluja 24 h i 48 h, intensitat i hores seguides. El nivell surt d’aquesta combinació, no d’una sola barra. El color és una situació, no un percentatge ni una instrucció.",
-    why: "Les riuades mediterrànies sovint tenen CAPE només moderat. Els colors alts demanen pluja al model, no només calor o aire inestable. Els models globals sovint es queden curts: 40–50 mm sota una DANA en una zona de riuada ja és un senyal fort.",
-  },
-  es: {
-    title: "Cómo se calcula",
-    lead: "Cada hora tiene su color. Tira y mapa: el día en conjunto. Un chubasco amarillo de una hora no pinta el día. Rojo = tormentas fuertes. Púrpura = riesgo de riada.",
-    formula:
-      "Dos bloques. Gota fría: aire frío arriba, agua en columna, mar cálido, viento de mar. Impacto: lluvia 24 h y 48 h, intensidad y horas seguidas. El nivel sale de esa combinación, no de una sola barra. El color es una situación, no un porcentaje ni una instrucción.",
-    why: "Las riadas mediterráneas suelen tener CAPE solo moderado. Los colores altos piden lluvia en el modelo, no solo calor o aire inestable. Los modelos globales a menudo se quedan cortos: 40–50 mm bajo una DANA en una zona de riada ya es una señal fuerte.",
-  },
-  en: {
-    title: "How it is calculated",
-    lead: "Each hour has its own colour. Strip and map: the day as a whole. One yellow hour does not paint the day. Red = heavy storms. Purple = flood risk.",
-    formula:
-      "Two blocks. Cold air above: cold core, column water, warm sea, wind off the sea. Impact: 24 h and 48 h rain, how hard it falls, and how long it lasts. The level comes from that combination, not from one bar. The colour is a situation, not a chance figure and not an instruction.",
-    why: "Mediterranean floods often have only moderate CAPE. The top colours need rain in the model, not heat or unstable air alone. Global models often under-do Mediterranean downpours: 40–50 mm under a DANA on a flood-prone area is already a strong signal.",
-  },
-  de: {
-    title: "Wie es berechnet wird",
-    lead: "Jede Stunde hat ihre Farbe. Leiste und Karte: der Tag insgesamt. Eine gelbe Stunde färbt den Tag nicht. Rot = starke Gewitter. Violett = Hochwasserrisiko.",
-    formula:
-      "Zwei Blöcke. Kaltluft oben: Kaltkern, Wassersäule, warmes Meer, Wind vom Meer. Wirkung: 24- und 48-h-Regen, Intensität und Dauer. Die Stufe kommt aus dem Zusammenspiel, nicht aus einer Leiste. Die Farbe ist eine Lage, keine Prozentzahl und keine Anweisung.",
-    why: "Mediterrane Hochwasser haben oft nur mäßiges CAPE. Die höchsten Farben brauchen Regen im Modell, nicht nur Hitze oder labile Luft. Globalmodelle unterschätzen Mittelmeerregen oft: 40–50 mm unter einer DANA in einem Risikogebiet ist bereits ein starkes Signal.",
-  },
-  nl: {
-    title: "Hoe het wordt berekend",
-    lead: "Elk uur heeft zijn eigen kleur. Strook en kaart tonen de dag als geheel. Eén geel uur kleurt de dag niet. Rood = zware buien. Paars = overstromingsrisico.",
-    formula:
-      "Twee blokken. Koude lucht boven: koude kern, kolomwater, warme zee, wind vanaf zee. Impact: 24- en 48-uursregen, hoe hard het valt en hoe lang het aanhoudt. Het niveau komt uit die samenhang, niet uit één balk. De kleur is een situatie, geen kanspercentage en geen instructie.",
-    why: "Mediterrane overstromingen ontstaan vaak met maar matige CAPE. De hoogste kleuren vragen regen in het model, niet alleen hitte of onstabiele lucht. Wereldmodellen missen Mediterrane buien vaak: 40–50 mm onder een DANA in een overstromingsgebied is al een sterk signaal.",
-  },
-  cs: {
-    title: "Jak se to počítá",
-    lead: "Každá hodina má svou barvu. Pruh a mapa: den jako celek. Jedna žlutá hodina den nepřebarví. Červená = silné bouře. Fialová = riziko povodně.",
-    formula:
-      "Dva bloky. Studený vzduch nahoře: studené jádro, voda ve sloupci, teplé moře, vítr od moře. Dopad: déšť 24 h a 48 h, intenzita a trvání. Úroveň plyne z té souhry, ne z jednoho pruhu. Barva je situace, ne procento a ne pokyn.",
-    why: "Středomořské povodně mají často jen mírné CAPE. Nejvyšší barvy chtějí déšť v modelu, ne jen teplo nebo nestabilní vzduch. Globální modely středomořské lijáky často podstřelují: 40–50 mm pod DANA v ohrožené oblasti je už silný signál.",
-  },
-};
-
 export const LEVEL_HINTS: Record<Lang, Record<RiskLevel, string>> = {
   ca: {
     0: "Temps tranquil, sense pluja forta.",

@@ -50,6 +50,7 @@ export const geocodeSchema = z.object({
         latitude: z.number(),
         longitude: z.number(),
         country_code: z.string().optional(),
+        country: z.string().optional(),
         admin1: z.string().optional(),
         admin2: z.string().optional(),
       }),

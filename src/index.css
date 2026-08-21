@@ -61,6 +61,21 @@ button:focus-visible, a:focus-visible, input:focus-visible {
 
 .brand {
   display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-logo {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  /* File is black-on-transparent; invert so it reads on the dark header. */
+  filter: invert(1);
+}
+
+.brand-text {
+  display: flex;
   flex-direction: column;
   gap: 2px;
 }
@@ -181,6 +196,14 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   border: 1px solid var(--line);
   border-radius: var(--radius);
   padding: 10px 12px;
+}
+
+.search-go {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  padding: 8px 12px;
 }
 
 .hits, .saved {

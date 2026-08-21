@@ -1,5 +1,5 @@
 import type { Copy } from "@/types/i18n";
-import { FACTOR_SCALE, INDICATOR_HELP, LEVEL_HINTS, METHOD, SHOCK_HELP } from "@/i18n/explain";
+import { FACTOR_SCALE, INDICATOR_HELP, LEVEL_HINTS, SHOCK_HELP } from "@/i18n/explain";
 import type { Lang } from "@/types/lang";
 
 const ca: Copy = {
@@ -7,7 +7,7 @@ const ca: Copy = {
   tag: "Risc a 7 dies · Espanya",
   official: "Avisos oficials AEMET",
   civil: "Protecció Civil",
-  search: "Cerca un municipi",
+  search: "Cerca un lloc",
   locate: "Fes servir la meva ubicació",
   locating: "Localitzant…",
   save: "Desa aquest lloc",
@@ -35,7 +35,7 @@ const ca: Copy = {
   disclaimer:
     "Projecte personal i no comercial per cartografiar DANA i el risc de riuada en {n} zones de la península ibèrica i les Balears.",
   data: "Dades: Open-Meteo (pluja: mescla local; nucli fred: ECMWF IFS + ICON) i SST marina. Mapa © OpenStreetMap © CARTO.",
-  emptySearch: "Cap resultat a Espanya.",
+  emptySearch: "Cap resultat.",
   remove: "Treure",
   patternNotRain: "Gota freda a l’aire.",
   hourlyLabel: "Hora a hora (dia triat)",
@@ -43,10 +43,6 @@ const ca: Copy = {
   radar: "Pluja ara",
   radarHint: "On està plovent ara. Els rectangles de color són la previsió del dia triat, no aquest radar.",
   shockHelp: SHOCK_HELP.ca,
-  methodTitle: METHOD.ca.title,
-  methodLead: METHOD.ca.lead,
-  methodFormula: METHOD.ca.formula,
-  methodWhyGate: METHOD.ca.why,
   levels: {
     0: { name: "Estable", hint: LEVEL_HINTS.ca[0] },
     1: { name: "Inestable", hint: LEVEL_HINTS.ca[1] },
@@ -82,7 +78,7 @@ const es: Copy = {
   tag: "Riesgo a 7 días · España",
   official: "Avisos oficiales AEMET",
   civil: "Protección Civil",
-  search: "Buscar un municipio",
+  search: "Buscar un lugar",
   locate: "Usar mi ubicación",
   locating: "Localizando…",
   save: "Guardar este sitio",
@@ -110,7 +106,7 @@ const es: Copy = {
   disclaimer:
     "Proyecto personal y no comercial para cartografiar DANA y el riesgo de riada en {n} zonas de la península ibérica y Baleares.",
   data: "Datos: Open-Meteo (lluvia: mezcla local; núcleo frío: ECMWF IFS + ICON) y SST marina. Mapa © OpenStreetMap © CARTO.",
-  emptySearch: "Ningún resultado en España.",
+  emptySearch: "Ningún resultado.",
   remove: "Quitar",
   patternNotRain: "Gota fría en el aire.",
   hourlyLabel: "Hora a hora (día elegido)",
@@ -118,10 +114,6 @@ const es: Copy = {
   radar: "Lluvia ahora",
   radarHint: "Dónde está lloviendo ahora. Los rectángulos de color son la previsión del día elegido, no este radar.",
   shockHelp: SHOCK_HELP.es,
-  methodTitle: METHOD.es.title,
-  methodLead: METHOD.es.lead,
-  methodFormula: METHOD.es.formula,
-  methodWhyGate: METHOD.es.why,
   levels: {
     0: { name: "Estable", hint: LEVEL_HINTS.es[0] },
     1: { name: "Inestable", hint: LEVEL_HINTS.es[1] },
@@ -185,7 +177,7 @@ const en: Copy = {
   disclaimer:
     "A personal, non-commercial project to map DANA and flood risk in {n} areas on mainland Spain and the Balearics.",
   data: "Data: Open-Meteo (rain: local mix; cold core: ECMWF IFS + ICON) and marine SST. Map © OpenStreetMap © CARTO.",
-  emptySearch: "No results in Spain.",
+  emptySearch: "No results.",
   remove: "Remove",
   patternNotRain: "Cold air high above.",
   hourlyLabel: "Hour by hour (selected day)",
@@ -193,10 +185,6 @@ const en: Copy = {
   radar: "Rain now",
   radarHint: "Where it is raining right now. The coloured squares are the forecast for the selected day, not this radar.",
   shockHelp: SHOCK_HELP.en,
-  methodTitle: METHOD.en.title,
-  methodLead: METHOD.en.lead,
-  methodFormula: METHOD.en.formula,
-  methodWhyGate: METHOD.en.why,
   levels: {
     0: { name: "Settled", hint: LEVEL_HINTS.en[0] },
     1: { name: "Unsettled", hint: LEVEL_HINTS.en[1] },
@@ -260,7 +248,7 @@ const de: Copy = {
   disclaimer:
     "Persönliches, nicht kommerzielles Projekt, um DANA und Hochwasserrisiko in {n} Gebieten auf dem spanischen Festland und den Balearen darzustellen.",
   data: "Daten: Open-Meteo (Regen: lokale Mischung; Kaltkern: ECMWF IFS + ICON) und Meeres-SST. Karte © OpenStreetMap © CARTO.",
-  emptySearch: "Keine Treffer in Spanien.",
+  emptySearch: "Keine Treffer.",
   remove: "Entfernen",
   patternNotRain: "Kaltluft hoch über uns.",
   hourlyLabel: "Stunde für Stunde (gewählter Tag)",
@@ -268,10 +256,6 @@ const de: Copy = {
   radar: "Regen jetzt",
   radarHint: "Wo es gerade regnet. Die farbigen Flächen sind die Vorhersage des gewählten Tages, nicht dieses Radar.",
   shockHelp: SHOCK_HELP.de,
-  methodTitle: METHOD.de.title,
-  methodLead: METHOD.de.lead,
-  methodFormula: METHOD.de.formula,
-  methodWhyGate: METHOD.de.why,
   levels: {
     0: { name: "Ruhig", hint: LEVEL_HINTS.de[0] },
     1: { name: "Labil", hint: LEVEL_HINTS.de[1] },
@@ -335,7 +319,7 @@ const nl: Copy = {
   disclaimer:
     "Persoonlijk, niet-commercieel project om DANA en overstromingsrisico in {n} gebieden op het Spaanse vasteland en de Balearen in kaart te brengen.",
   data: "Data: Open-Meteo (regen: lokale mix; koude kern: ECMWF IFS + ICON) en mariene SST. Kaart © OpenStreetMap © CARTO.",
-  emptySearch: "Geen resultaten in Spanje.",
+  emptySearch: "Geen resultaten.",
   remove: "Verwijderen",
   patternNotRain: "Koude lucht hoog boven ons.",
   hourlyLabel: "Uur na uur (gekozen dag)",
@@ -343,10 +327,6 @@ const nl: Copy = {
   radar: "Regen nu",
   radarHint: "Waar het nu regent. De gekleurde vlakken zijn de verwachting van de gekozen dag, niet deze radar.",
   shockHelp: SHOCK_HELP.nl,
-  methodTitle: METHOD.nl.title,
-  methodLead: METHOD.nl.lead,
-  methodFormula: METHOD.nl.formula,
-  methodWhyGate: METHOD.nl.why,
   levels: {
     0: { name: "Stabiel", hint: LEVEL_HINTS.nl[0] },
     1: { name: "Onbestendig", hint: LEVEL_HINTS.nl[1] },
@@ -410,7 +390,7 @@ const cs: Copy = {
   disclaimer:
     "Osobní nekomerční projekt mapující DANA a povodňové riziko v {n} oblastech pevninského Španělska a Baleár.",
   data: "Data: Open-Meteo (déšť: místní mix; studené jádro: ECMWF IFS + ICON) a mořská SST. Mapa © OpenStreetMap © CARTO.",
-  emptySearch: "Ve Španělsku nic nenalezeno.",
+  emptySearch: "Nic nenalezeno.",
   remove: "Odebrat",
   patternNotRain: "Studený vzduch vysoko nad námi.",
   hourlyLabel: "Hodina po hodině (zvolený den)",
@@ -418,10 +398,6 @@ const cs: Copy = {
   radar: "Déšť teď",
   radarHint: "Kde právě prší. Barevná pole jsou předpověď zvoleného dne, ne tento radar.",
   shockHelp: SHOCK_HELP.cs,
-  methodTitle: METHOD.cs.title,
-  methodLead: METHOD.cs.lead,
-  methodFormula: METHOD.cs.formula,
-  methodWhyGate: METHOD.cs.why,
   levels: {
     0: { name: "Klidno", hint: LEVEL_HINTS.cs[0] },
     1: { name: "Nestabilní", hint: LEVEL_HINTS.cs[1] },

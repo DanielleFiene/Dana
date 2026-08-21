@@ -178,7 +178,7 @@ An AROME-only false alarm is `hangover` or `leftover-rain` (or `unassigned`) —
 
 - Open-Meteo forecast (7 × 24 h) and marine SST. Non-commercial, [CC BY 4.0](https://open-meteo.com/).
 - ECMWF IFS 0.25° \(T_{500}\) / \(z_{500}\) via Open-Meteo, merged with ICON as colder/lower.
-- Geocoding limited to Spain.
+- Geocoding worldwide; the index only applies on mainland Spain and the Balearics.
 - Map: OpenStreetMap / CARTO. Live rain overlay: RainViewer (tiles to zoom 7).
 - Magre observed: AEMET Turís (peak-hours) and CHJ SAIH episode table as above.
 - Málaga 13 Nov 2024 observed: Hidrosur Cártama `038P01` rain and `038R03` nivel/caudal fixtures (not CHG). 13 Nov rain is a model-day referee; stage peaks 14 Nov.
