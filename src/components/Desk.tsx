@@ -123,30 +123,34 @@ export function HourlyBars({
   return (
     <div>
       <div className="hero-kicker">{t.hourlyLabel}</div>
-      <div className="hours">
-        {hours.map((h) => (
-          <button
-            key={h.time}
-            type="button"
-            className={h.time === selectedTime ? "hour on" : "hour"}
-            style={{
-              height: `${String(Math.max(8, Math.round(h.impact * 56)))}px`,
-              background: RISK_META[paintLevel(h)].color,
-            }}
-            title={`${formatDateTime(h.time, lang)} · ${levelLabel(h.level, lang)}`}
-            aria-label={formatDateTime(h.time, lang)}
-            aria-pressed={h.time === selectedTime}
-            onClick={() => onSelect(h.time)}
-          />
-        ))}
-      </div>
-      {hours.length > 0 ? (
-        <div className="hour-axis">
-          <span>00</span>
-          <span>12</span>
-          <span>24</span>
+      <div className="hours-scroller">
+        <div className="hours-inner">
+          <div className="hours">
+            {hours.map((h) => (
+              <button
+                key={h.time}
+                type="button"
+                className={h.time === selectedTime ? "hour on" : "hour"}
+                style={{
+                  height: `${String(Math.max(8, Math.round(h.impact * 56)))}px`,
+                  background: RISK_META[paintLevel(h)].color,
+                }}
+                title={`${formatDateTime(h.time, lang)} · ${levelLabel(h.level, lang)}`}
+                aria-label={formatDateTime(h.time, lang)}
+                aria-pressed={h.time === selectedTime}
+                onClick={() => onSelect(h.time)}
+              />
+            ))}
+          </div>
+          {hours.length > 0 ? (
+            <div className="hour-axis">
+              <span>00</span>
+              <span>12</span>
+              <span>24</span>
+            </div>
+          ) : null}
         </div>
-      ) : null}
+      </div>
     </div>
   );
 }

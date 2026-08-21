@@ -1,5 +1,18 @@
 import { describe, expect, it } from "vitest";
-import { SQUARE_MAX_ZOOM, SQUARE_MIN_ZOOM, SQUARE_PADDING, mergeInsets, overlayInset, pinCamera, pinOffset, projectOnCamera, squareCamera, squareFocus, ZERO_INSET } from "@/map/focus";
+import {
+  SQUARE_MAX_ZOOM,
+  SQUARE_MIN_ZOOM,
+  cameraPadding,
+  mergeInsets,
+  overlayInset,
+  pinCamera,
+  pinOffset,
+  projectOnCamera,
+  squareCamera,
+  squareFocus,
+  visibleView,
+  ZERO_INSET,
+} from "@/map/focus";
 
 const valencia = [
   [-0.65, 39.62] as const,
@@ -43,13 +56,6 @@ describe("squareCamera", () => {
     expect(cam?.zoom).toBeLessThanOrEqual(8);
   });
 
-  it("clears MapLibre padding so the square is not shifted down", () => {
-    expect(SQUARE_PADDING.top).toBe(0);
-    expect(SQUARE_PADDING.bottom).toBe(SQUARE_PADDING.top);
-    expect(SQUARE_PADDING.left).toBe(SQUARE_PADDING.right);
-    expect(SQUARE_PADDING.left).toBe(SQUARE_PADDING.top);
-  });
-
   it("places that square in the middle of the map pane", () => {
     const cam = squareCamera(valencia, view);
     expect(cam).not.toBeNull();
@@ -70,6 +76,18 @@ describe("squareCamera", () => {
     expect(south.y).toBeLessThan(view.height - 40);
   });
 
+  it("frames the square in the remaining map beside a left info desk", () => {
+    const overlay = { ...ZERO_INSET, left: 412 };
+    const wide = { width: 1200, height: 800 };
+    const cam = squareCamera(valencia, wide, overlay);
+    expect(cam).not.toBeNull();
+    if (!cam) return;
+    expect(cam.offset).toEqual([0, 0]);
+    const mid = projectOnCamera(cam.center[0], cam.center[1], cam, wide, overlay);
+    expect(mid.x).toBeCloseTo((wide.width + overlay.left) / 2, 5);
+    expect(mid.y).toBeCloseTo(wide.height / 2, 5);
+  });
+
   it("does not zoom around a click point (that is what made double-click feel different)", () => {
     const cam = squareCamera(valencia, view);
     expect(cam).not.toBeNull();
@@ -78,33 +96,37 @@ describe("squareCamera", () => {
 });
 
 describe("pinCamera", () => {
-  it("puts GPS in the middle of the map, not a corridor square", () => {
+  it("puts GPS on that point; map padding is what avoids the desk", () => {
     const cam = pinCamera(4.9, 52.37);
     expect(cam.center).toEqual([4.9, 52.37]);
     expect(cam.offset).toEqual([0, 0]);
     expect(cam.zoom).toBeGreaterThan(7);
   });
+});
 
-  it("shifts right of a left info desk so the pin is not under the panel", () => {
-    const overlay = { left: 412, right: 0, top: 0, bottom: 0 };
+describe("cameraPadding", () => {
+  it("shifts the visual centre right of a left info desk", () => {
+    const overlay = { ...ZERO_INSET, left: 412 };
     const wide = { width: 1200, height: 800 };
-    const cam = pinCamera(4.9, 52.37, wide, overlay);
-    expect(cam.offset[0]).toBeCloseTo(206);
-    expect(cam.offset[1]).toBe(0);
-    const at = projectOnCamera(4.9, 52.37, cam, wide);
+    const pad = cameraPadding(wide, overlay);
+    expect(pad.left).toBe(412);
+    const at = projectOnCamera(4.9, 52.37, { center: [4.9, 52.37], zoom: 7.6 }, wide, overlay);
     expect(at.x).toBeCloseTo((wide.width + overlay.left) / 2, 5);
     expect(at.y).toBeCloseTo(wide.height / 2, 5);
   });
 
-  it("shifts up from a bottom info sheet that covers the map", () => {
-    const overlay = { left: 0, right: 0, top: 0, bottom: 400 };
+  it("shifts the visual centre up from a bottom sheet", () => {
+    const overlay = { ...ZERO_INSET, bottom: 400 };
     const phone = { width: 390, height: 844 };
-    const cam = pinCamera(-0.38, 39.47, phone, overlay);
-    expect(cam.offset[0]).toBe(0);
-    expect(cam.offset[1]).toBeCloseTo(-200);
-    const at = projectOnCamera(-0.38, 39.47, cam, phone);
+    const at = projectOnCamera(-0.38, 39.47, { center: [-0.38, 39.47], zoom: 7.6 }, phone, overlay);
     expect(at.x).toBeCloseTo(phone.width / 2, 5);
     expect(at.y).toBeCloseTo((phone.height - overlay.bottom) / 2, 5);
+  });
+
+  it("shrinks the frame used for corridor zoom", () => {
+    const overlay = { ...ZERO_INSET, left: 400 };
+    const wide = { width: 1200, height: 800 };
+    expect(visibleView(wide, overlay)).toEqual({ width: 800, height: 800 });
   });
 });
 
@@ -142,8 +164,11 @@ describe("pinOffset", () => {
 
 describe("mergeInsets", () => {
   it("keeps the left desk and a top strip together", () => {
-    expect(
-      mergeInsets({ ...ZERO_INSET, left: 412 }, { ...ZERO_INSET, top: 72 }),
-    ).toEqual({ top: 72, bottom: 0, left: 412, right: 0 });
+    expect(mergeInsets({ ...ZERO_INSET, left: 412 }, { ...ZERO_INSET, top: 72 })).toEqual({
+      top: 72,
+      bottom: 0,
+      left: 412,
+      right: 0,
+    });
   });
 });

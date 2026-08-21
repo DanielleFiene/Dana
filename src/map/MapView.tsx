@@ -8,7 +8,7 @@ import { HOTSPOTS } from "@/data/hotspots";
 import { VALENCIA_CENTER, VALENCIA_ZOOM } from "@/lib/spain";
 import type { ScoredPlace } from "@/api/pipeline";
 import { corridorFill } from "@/map/fill";
-import { SQUARE_PADDING, mergeInsets, overlayInset, pinCamera, squareCamera, ZERO_INSET } from "@/map/focus";
+import { cameraPadding, mergeInsets, overlayInset, pinCamera, squareCamera, ZERO_INSET } from "@/map/focus";
 
 setWorkerUrl(mapWorkerUrl);
 
@@ -58,6 +58,21 @@ function chromeOverlay(mapEl: HTMLElement) {
     inset = mergeInsets(inset, overlayInset(map, el.getBoundingClientRect()));
   }
   return inset;
+}
+
+function applyChrome(map: MapLibreMap) {
+  const box = map.getContainer();
+  const view = { width: box.clientWidth, height: box.clientHeight };
+  const inset = cameraPadding(view, chromeOverlay(box));
+  const app = box.closest(".app");
+  if (app instanceof HTMLElement) {
+    app.style.setProperty("--overlay-top", `${String(Math.round(inset.top))}px`);
+    app.style.setProperty("--overlay-right", `${String(Math.round(inset.right))}px`);
+    app.style.setProperty("--overlay-bottom", `${String(Math.round(inset.bottom))}px`);
+    app.style.setProperty("--overlay-left", `${String(Math.round(inset.left))}px`);
+  }
+  map.setPadding(inset);
+  return { view, inset };
 }
 
 export function MapView({
@@ -175,16 +190,16 @@ export function MapView({
     map.on("load", () => {
       paint();
       lockZoomClick();
+      applyChrome(map);
     });
     const frameSquare = (id: string) => {
       const hotspot = HOTSPOTS.find((h) => h.id === id);
       if (!hotspot) return;
       map.doubleClickZoom.disable();
       map.stop();
-      map.setPadding({ ...SQUARE_PADDING });
-      const box = map.getContainer();
-      const fly = squareCamera(hotspot.polygon, { width: box.clientWidth, height: box.clientHeight });
-      if (fly) map.flyTo(fly);
+      const { view, inset } = applyChrome(map);
+      const fly = squareCamera(hotspot.polygon, view, inset);
+      if (fly) map.flyTo({ ...fly, padding: inset });
     };
     const pick = (e: MapLayerMouseEvent) => {
       e.preventDefault();
@@ -211,11 +226,18 @@ export function MapView({
       map.getCanvas().style.cursor = "";
     });
     mapRef.current = map;
-    const ro = new ResizeObserver(() => {
+    const applyLayout = () => {
       map.resize();
-    });
+      applyChrome(map);
+    };
+    const ro = new ResizeObserver(applyLayout);
     ro.observe(map.getContainer());
+    for (const el of document.querySelectorAll("[data-map-overlay]")) {
+      ro.observe(el);
+    }
+    window.addEventListener("resize", applyLayout);
     return () => {
+      window.removeEventListener("resize", applyLayout);
       ro.disconnect();
       if (radarTimer.current !== null) window.clearInterval(radarTimer.current);
       markerRef.current?.remove();
@@ -251,15 +273,12 @@ export function MapView({
     const frame = () => {
       map.doubleClickZoom.disable();
       map.stop();
-      map.resize();
-      map.setPadding({ ...SQUARE_PADDING });
-      const box = map.getContainer();
-      const view = { width: box.clientWidth, height: box.clientHeight };
+      const { view, inset } = applyChrome(map);
       const square =
         focusMode === "square" && hotspot
-          ? squareCamera(hotspot.polygon, view)
+          ? squareCamera(hotspot.polygon, view, inset)
           : null;
-      map.flyTo(square ?? pinCamera(pinLon, pinLat, view, chromeOverlay(box)));
+      map.flyTo({ ...(square ?? pinCamera(pinLon, pinLat)), padding: inset });
     };
     if (map.isStyleLoaded()) frame();
     else map.once("load", frame);
