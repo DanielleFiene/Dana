@@ -130,7 +130,7 @@ export function HourlyBars({
             type="button"
             className={h.time === selectedTime ? "hour on" : "hour"}
             style={{
-              height: `${String(Math.max(8, Math.round(h.impact * 72)))}px`,
+              height: `${String(Math.max(8, Math.round(h.impact * 56)))}px`,
               background: RISK_META[paintLevel(h)].color,
             }}
             title={`${formatDateTime(h.time, lang)} · ${levelLabel(h.level, lang)}`}

@@ -40,91 +40,106 @@ export function PlaceSearch({
   const [q, setQ] = useState("");
   const [hits, setHits] = useState<PlaceHit[]>([]);
   const [empty, setEmpty] = useState(false);
-  const skipSuggest = useRef(false);
+  const timerRef = useRef<number | null>(null);
+  const seqRef = useRef(0);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current !== null) window.clearTimeout(timerRef.current);
+    };
+  }, []);
+
+  function clearTimer() {
+    if (timerRef.current !== null) {
+      window.clearTimeout(timerRef.current);
+      timerRef.current = null;
+    }
+  }
+
+  async function fetchHits(query: string) {
+    const seq = ++seqRef.current;
+    try {
+      const found = await searchPlaces(query, lang);
+      if (seq !== seqRef.current) return;
+      setHits(found);
+      setEmpty(found.length === 0);
+    } catch {
+      if (seq !== seqRef.current) return;
+      setHits([]);
+      setEmpty(true);
+    }
+  }
+
+  function scheduleLookup(query: string) {
+    clearTimer();
+    const trimmed = query.trim();
+    if (trimmed.length < 2) {
+      seqRef.current += 1;
+      setHits([]);
+      setEmpty(false);
+      return;
+    }
+    timerRef.current = window.setTimeout(() => {
+      void fetchHits(trimmed);
+    }, 280);
+  }
 
   function choose(hit: PlaceHit) {
-    skipSuggest.current = true;
+    clearTimer();
+    seqRef.current += 1;
     setQ(hit.name);
     setHits([]);
     setEmpty(false);
     onPick(hit);
   }
 
-  async function lookup(query: string) {
-    try {
-      const found = await searchPlaces(query, lang);
-      setHits(found);
-      setEmpty(found.length === 0);
-    } catch {
-      setHits([]);
-      setEmpty(true);
-    }
-  }
-
-  useEffect(() => {
-    if (skipSuggest.current) {
-      skipSuggest.current = false;
-      return;
-    }
+  async function run(e: FormEvent) {
+    e.preventDefault();
+    clearTimer();
     const trimmed = q.trim();
     if (trimmed.length < 2) {
+      seqRef.current += 1;
       setHits([]);
       setEmpty(false);
       return;
     }
-    let cancelled = false;
-    const timer = window.setTimeout(() => {
-      void (async () => {
-        try {
-          const found = await searchPlaces(trimmed, lang);
-          if (cancelled) return;
-          setHits(found);
-          setEmpty(found.length === 0);
-        } catch {
-          if (cancelled) return;
-          setHits([]);
-          setEmpty(true);
-        }
-      })();
-    }, 280);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, [q, lang]);
-
-  async function run(e: FormEvent) {
-    e.preventDefault();
-    await lookup(q);
+    await fetchHits(trimmed);
   }
 
   return (
-    <div>
+    <div className="search-box">
       <form className="search-row" onSubmit={(e) => void run(e)}>
         <input
           type="search"
           value={q}
-          onChange={(ev) => setQ(ev.target.value)}
+          onChange={(ev) => {
+            const next = ev.target.value;
+            setQ(next);
+            scheduleLookup(next);
+          }}
           placeholder={t.search}
           maxLength={80}
           autoComplete="off"
           spellCheck={false}
+          enterKeyHint="search"
         />
         <button className="solid search-go" type="submit" aria-label={t.search}>
           <SearchIcon />
         </button>
       </form>
       {empty ? <p className="hero-kicker">{t.emptySearch}</p> : null}
-      <ul className="hits">
-        {hits.map((h) => (
-          <li key={h.id}>
-            <button type="button" onClick={() => choose(h)}>
-              {h.name}
-              {h.region ? ` · ${h.region}` : ""}
-            </button>
-          </li>
-        ))}
-      </ul>
+      {hits.length > 0 ? (
+        <ul className="hits">
+          {hits.map((h) => (
+            <li key={h.id}>
+              <button type="button" onClick={() => choose(h)}>
+                {h.name}
+                {h.region ? ` · ${h.region}` : ""}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
     </div>
   );
 }

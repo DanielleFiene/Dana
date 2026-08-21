@@ -53,7 +53,7 @@ export function LanguageSwitcher({
         onClick={() => setOpen((v) => !v)}
       >
         <GlobeIcon />
-        <span>{current.native}</span>
+      <span className="lang-name">{current.native}</span>
       </button>
       {open ? (
         <ul className="lang-menu" id={menuId} role="listbox" aria-label={t.language}>

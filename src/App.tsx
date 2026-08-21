@@ -25,6 +25,15 @@ import type { SavedPlace } from "@/types/place";
 
 const MapView = lazy(() => import("@/map/MapView"));
 
+function LocateIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 3v3M12 18v3M3 12h3M18 12h3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function App() {
   const [lang, setLang] = useState<Lang>(() => loadLang());
   const [desk, setDesk] = useState<ScoredPlace[]>([]);
@@ -210,106 +219,115 @@ export function App() {
 
   return (
     <div className="app">
-      <header className="top">
+      <Suspense fallback={<div className="map-wrap" />}>
+        <MapView
+          desk={desk}
+          selectedId={active?.place.hotspotId ?? active?.place.id ?? null}
+          selectedDate={visibleDay}
+          pinLat={active?.place.lat ?? null}
+          pinLon={active?.place.lon ?? null}
+          followPin={followPin}
+          focusMode={focusMode}
+          focusTick={focusTick}
+          radarOn={radarOn}
+          labels={{ radar: t.radar, radarHint: t.radarHint, day: visibleDay ? dayChip(visibleDay, lang) : "" }}
+          onRadar={setRadarOn}
+          onSelect={onHotspot}
+        />
+      </Suspense>
+
+      <header className="chrome-top">
         <div className="brand">
           <img
             className="brand-logo"
             src={`${import.meta.env.BASE_URL}vortex.png`}
             alt=""
-            width={32}
-            height={32}
+            width={28}
+            height={28}
           />
           <div className="brand-text">
             <strong>{t.title}</strong>
             <span>{t.tag}</span>
           </div>
         </div>
-        <OfficialLinks lang={lang} />
+        <PlaceSearch
+          lang={lang}
+          onPick={(hit) => {
+            void selectPlace(placeFromCoord(hit.id, hit.name, hit.lat, hit.lon), !inSpainAutoLocate(hit.lat, hit.lon), "pin");
+          }}
+        />
+        <button
+          type="button"
+          className="ghost icon-btn"
+          onClick={locate}
+          disabled={locating}
+          aria-label={locating ? t.locating : t.locate}
+          title={t.locate}
+        >
+          <LocateIcon />
+        </button>
+        <div className="chrome-official">
+          <OfficialLinks lang={lang} />
+        </div>
         <LanguageSwitcher lang={lang} onChange={switchLang} />
       </header>
 
-      <div className="shell">
-        <section className="panel">
-          <PlaceSearch
-            lang={lang}
-            onPick={(hit) => {
-              void selectPlace(placeFromCoord(hit.id, hit.name, hit.lat, hit.lon), !inSpainAutoLocate(hit.lat, hit.lon), "pin");
-            }}
-          />
-          <div className="search-row">
-            <button type="button" className="ghost" onClick={locate} disabled={locating}>
-              {locating ? t.locating : t.locate}
-            </button>
-            <button type="button" className="ghost" onClick={saveActive} disabled={!active}>
-              {t.save}
+      <section className="chrome-desk">
+        <div className="sheet-grip" aria-hidden="true" />
+        {failed ? (
+          <div className="warn">
+            {t.fail}{" "}
+            <button type="button" className="solid" onClick={() => void loadDesk()}>
+              {t.retry}
             </button>
           </div>
-          <SavedList
-            lang={lang}
-            places={saved}
-            onPick={(p) => void selectPlace(placeFromCoord(p.id, p.name, p.lat, p.lon), !inSpainAutoLocate(p.lat, p.lon))}
-            onRemove={(id) => {
-              const next = saved.filter((p) => p.id !== id);
-              setSaved(next);
-              persistSavedPlaces(next);
-            }}
-          />
-          {failed ? (
-            <div className="warn">
-              {t.fail}{" "}
-              <button type="button" className="solid" onClick={() => void loadDesk()}>
-                {t.retry}
+        ) : null}
+        {outside ? <div className="warn">{t.outside}</div> : null}
+        {loading && !active ? <p className="credit">{t.loading}</p> : null}
+        {active ? (
+          <>
+            <StatusHero lang={lang} name={active.place.name} hour={selectedHour} week={active.week} />
+            <DayStrip
+              lang={lang}
+              days={active.days}
+              selected={visibleDay}
+              onSelect={(date) => {
+                setDay(date);
+                const hours = active.days.find((d) => d.date === date)?.hours ?? [];
+                setHourTime(hourAtClock(hours)?.time ?? null);
+              }}
+            />
+            <HourlyBars lang={lang} hours={selectedHours} selectedTime={selectedHour?.time ?? null} onSelect={setHourTime} />
+            <div className="desk-toolbar">
+              <button type="button" className="ghost" onClick={saveActive} disabled={!active}>
+                {t.save}
               </button>
             </div>
-          ) : null}
-          {outside ? <div className="warn">{t.outside}</div> : null}
-          {loading && !active ? <p>{t.loading}</p> : null}
-          {active ? (
-            <>
-              <StatusHero lang={lang} name={active.place.name} hour={selectedHour} week={active.week} />
-              <DayStrip
-                lang={lang}
-                days={active.days}
-                selected={visibleDay}
-                onSelect={(date) => {
-                  setDay(date);
-                  const hours = active.days.find((d) => d.date === date)?.hours ?? [];
-                  setHourTime(hourAtClock(hours)?.time ?? null);
-                }}
-              />
-              <HourlyBars lang={lang} hours={selectedHours} selectedTime={selectedHour?.time ?? null} onSelect={setHourTime} />
-              <FactorList lang={lang} hour={selectedHour} />
-              <MethodPanel lang={lang} />
-            </>
-          ) : null}
-          <Legend lang={lang} />
-        </section>
-        <Suspense fallback={<div className="map-wrap" />}>
-          <MapView
-            desk={desk}
-            selectedId={active?.place.hotspotId ?? active?.place.id ?? null}
-            selectedDate={visibleDay}
-            pinLat={active?.place.lat ?? null}
-            pinLon={active?.place.lon ?? null}
-            followPin={followPin}
-            focusMode={focusMode}
-            focusTick={focusTick}
-            radarOn={radarOn}
-            labels={{ radar: t.radar, radarHint: t.radarHint, day: visibleDay ? dayChip(visibleDay, lang) : "" }}
-            onRadar={setRadarOn}
-            onSelect={onHotspot}
-          />
-        </Suspense>
-      </div>
-
-      <footer className="foot">
-        <p>{t.disclaimer.replace("{n}", String(HOTSPOTS.length))}</p>
-        <p>
+            <SavedList
+              lang={lang}
+              places={saved}
+              onPick={(p) => void selectPlace(placeFromCoord(p.id, p.name, p.lat, p.lon), !inSpainAutoLocate(p.lat, p.lon))}
+              onRemove={(id) => {
+                const next = saved.filter((p) => p.id !== id);
+                setSaved(next);
+                persistSavedPlaces(next);
+              }}
+            />
+            <FactorList lang={lang} hour={selectedHour} />
+            <MethodPanel lang={lang} />
+          </>
+        ) : null}
+        <Legend lang={lang} />
+        <div className="desk-official">
+          <OfficialLinks lang={lang} />
+        </div>
+        <p className="credit">{t.disclaimer.replace("{n}", String(HOTSPOTS.length))}</p>
+        <p className="credit">
           <a href="https://www.flaticon.com/free-icons/vortex" title="vortex icons" target="_blank" rel="noopener noreferrer">
             Vortex icons created by Magnific - Flaticon
           </a>
         </p>
-      </footer>
+      </section>
     </div>
   );
 }
