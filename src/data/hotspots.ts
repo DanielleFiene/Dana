@@ -265,7 +265,11 @@ export function hotspotById(id: string): Hotspot | undefined {
   return HOTSPOTS.find((h) => h.id === id);
 }
 
-/** AROME France domain on Open-Meteo: not Málaga / Almería / Gibraltar. Always pass models=arome_france. */
+/** AROME France domain on Open-Meteo: not Málaga / Almería / Gibraltar.
+ *  Those three will never yield AROME comparison rows. Inland-orographic
+ *  counting therefore stays on labelled cells in the Valencia / Murcia /
+ *  Catalonia corridors (still not a rule before INLAND_AROME_RULE_MIN_CELLS).
+ */
 const AROME_OUT = new Set(["almeria", "malaga", "gibraltar"]);
 
 export function aromeCovers(hotspotId: string): boolean {
@@ -289,7 +293,9 @@ export function corridorBelt(hotspotId: string): CorridorBelt {
   return "coastal-plain";
 }
 
-/** Only inland-orographic labelled cells. Mallorca (island) and Almería (south, out of AROME) do not increment the 6. */
+/** Only inland-orographic labelled cells. Mallorca (island) and the south belt
+ *  (Málaga / Almería / Gibraltar — always out of AROME) do not increment the 6.
+ */
 export function countsTowardInlandAromeRule(hotspotId: string): boolean {
   return corridorBelt(hotspotId) === "inland-orographic";
 }

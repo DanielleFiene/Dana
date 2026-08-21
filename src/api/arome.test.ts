@@ -59,6 +59,8 @@ describe("AROME source wiring", () => {
     expect(countsTowardInlandAromeRule("utiel-requena")).toBe(true);
     expect(countsTowardInlandAromeRule("mallorca")).toBe(false);
     expect(countsTowardInlandAromeRule("almeria")).toBe(false);
+    expect(countsTowardInlandAromeRule("malaga")).toBe(false);
+    expect(countsTowardInlandAromeRule("gibraltar")).toBe(false);
     expect(countsTowardInlandAromeRule("murcia")).toBe(false);
   });
 

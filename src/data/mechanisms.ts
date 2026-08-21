@@ -14,11 +14,18 @@ export const DESK_MECHANISMS = {
     "Calendar day already quiet, but rolling 24/48 h still holds the previous dump (or leftover impact from those millimetres). Corridor upscale / wet impact, not the thin 0.48+0.38 hangover hinge. An AROME-only leftover is this same knob: AROME put more Magre millimetres into the window, not a new 'AROME false alarm' bucket.",
   "lead-time-dry":
     "Analysis (stitched first hours) had rain; previous-run T−24/48/72 did not. Forecast skill, not the live formula.",
+  "upstream-inflow":
+    "Local millimetres were not the core; stage/flow still rose because the catchment brought water in from upstream. Cártama 13 Nov 2024: 77 mm rain, river peak the next morning. Not grid-undercatch — a better rain model is the wrong fix; the missing input is upstream stage/flow. Do not move rain thresholds. One ~22 h lag is a recorded routing delay, not a rule until another basin repeats it.",
 } as const;
 
 export type DeskMechanism = keyof typeof DESK_MECHANISMS;
 
-export type AnatomyWhen = "miss" | "false-alarm" | "hit-despite-undercatch" | "lead-time-dry";
+export type AnatomyWhen =
+  | "miss"
+  | "false-alarm"
+  | "hit-despite-undercatch"
+  | "lead-time-dry"
+  | "upstream-inflow";
 
 export type RainSource = "mix" | "arome";
 
@@ -152,6 +159,13 @@ export const SQUARE_ANATOMY: readonly SquareAnatomy[] = [
     desk: "grid-undercatch",
     note: "Desk centre ~2 mm vs Poniente rambla flooding. Millimetres, not the hangover hinge. AROME is out of domain on this square — not an AROME skill score, not inland-orographic.",
   },
+  {
+    eventId: "2024-11-malaga",
+    hotspotId: "malaga",
+    when: "upstream-inflow",
+    desk: "upstream-inflow",
+    note: "Hidrosur Cártama 038P01 77.3 mm on 13 Nov (Europe/Madrid) vs mix ~44 mm at the gauge / ~51 mm at the square — 1.8× short, not Magre 3×. Rain peak 12:00 on the 13th; 038R03 nivel peak 3.08 m at 10:00 on the 14th (~22 h). Local rain was not Turís-scale; the Guadalhorce still rose. Not grid-undercatch: the missing input is upstream stage/flow, not a lower rain threshold. ECMWF T−72 ~68 mm at the square vs 77 mm SAIH is one lead on one cell — not a rule. AROME is out of domain (south) — this square will never yield an AROME comparison row and does not increment inland-orographic.",
+  },
 ];
 
 /** Catchment / hydrology — not a score knob. Unverified until SAIH + burn maps. */
@@ -159,6 +173,7 @@ export const CATCHMENT_HYPOTHESES = [
   "Burn scars can raise runoff for the same millimetres (hydrophobic ash, less canopy). That would make a riuada worse on the ground. It does not explain a 17 mm grid vs 180 mm Salou, and it does not explain a 6 mm Magre hangover painted as heavy storms.",
   "Treat fire as a possible catchment multiplier later (with maps + gauges), never as a reason to move T500, soil weight, and 22 mm with the same hand.",
   "SAIH later calibrates ECMWF ENS members. It is not a reason to fold AROME into the live mix.",
+  "Cártama Nov 2024 is upstream-inflow, not a burn-scar story and not a rain-slider. The ~22 h rain-to-stage lag is one catchment, one event.",
 ] as const;
 
 export function anatomyFor(

@@ -76,6 +76,7 @@ export function deskMechanismFor(
   if (verdict === "false-alarm" && anatomy.when === "false-alarm") return anatomy.desk;
   if (verdict === "hit" && anatomy.when === "hit-despite-undercatch") return anatomy.desk;
   if (verdict === "hit" && anatomy.when === "lead-time-dry") return anatomy.desk;
+  if ((verdict === "hit" || verdict === "miss") && anatomy.when === "upstream-inflow") return anatomy.desk;
   if (verdict === "miss" || verdict === "false-alarm") return "unassigned";
   return null;
 }
@@ -86,6 +87,7 @@ export type DeskTally = {
   leftoverRainFalseAlarms: string[];
   hitDespiteUndercatch: string[];
   leadTimeDry: string[];
+  upstreamInflow: string[];
   unassignedMisses: string[];
   unassignedFalseAlarms: string[];
 };
@@ -97,6 +99,7 @@ function emptyDeskTally(): DeskTally {
     leftoverRainFalseAlarms: [],
     hitDespiteUndercatch: [],
     leadTimeDry: [],
+    upstreamInflow: [],
     unassignedMisses: [],
     unassignedFalseAlarms: [],
   };
@@ -119,6 +122,7 @@ export function tallyDeskMechanisms(
     const m = deskMechanismFor(eventId, hotspotId, "miss", date, source);
     const key = `${eventId}/${id}`;
     if (m === "grid-undercatch") out.gridUndercatchMisses.push(key);
+    else if (m === "upstream-inflow") out.upstreamInflow.push(key);
     else out.unassignedMisses.push(key);
   }
   for (const id of summary.falseAlarms) {
@@ -136,6 +140,7 @@ export function tallyDeskMechanisms(
     const key = `${eventId}/${id}`;
     if (anatomy.when === "hit-despite-undercatch") out.hitDespiteUndercatch.push(key);
     if (anatomy.when === "lead-time-dry") out.leadTimeDry.push(key);
+    if (anatomy.when === "upstream-inflow") out.upstreamInflow.push(key);
   }
   return out;
 }
@@ -148,6 +153,7 @@ export function mergeDeskTallies(parts: readonly DeskTally[]): DeskTally {
     out.leftoverRainFalseAlarms.push(...p.leftoverRainFalseAlarms);
     out.hitDespiteUndercatch.push(...p.hitDespiteUndercatch);
     out.leadTimeDry.push(...p.leadTimeDry);
+    out.upstreamInflow.push(...p.upstreamInflow);
     out.unassignedMisses.push(...p.unassignedMisses);
     out.unassignedFalseAlarms.push(...p.unassignedFalseAlarms);
   }
@@ -162,6 +168,7 @@ function formatDeskTally(tally: DeskTally): string[] {
     `  leftover-rain false alarms: ${tally.leftoverRainFalseAlarms.join(", ") || "—"}`,
     `  hits despite undercatch:    ${tally.hitDespiteUndercatch.join(", ") || "—"}`,
     `  lead-time dry (still a hit): ${tally.leadTimeDry.join(", ") || "—"}`,
+    `  upstream-inflow:            ${tally.upstreamInflow.join(", ") || "—"}`,
     `  unassigned misses:          ${tally.unassignedMisses.join(", ") || "—"}`,
     `  unassigned false alarms:    ${tally.unassignedFalseAlarms.join(", ") || "—"}`,
   ];
@@ -283,7 +290,12 @@ export function formatReport(
     const anatomy = anatomyFor(event.id, row.hotspotId, row.date, source);
     if (!anatomy) continue;
     if (row.verdict === "ok-quiet" || row.verdict === "unlabelled") continue;
-    if (row.verdict === "hit" && anatomy.when !== "hit-despite-undercatch" && anatomy.when !== "lead-time-dry") {
+    if (
+      row.verdict === "hit" &&
+      anatomy.when !== "hit-despite-undercatch" &&
+      anatomy.when !== "lead-time-dry" &&
+      anatomy.when !== "upstream-inflow"
+    ) {
       continue;
     }
     lines.push(`  ${row.hotspotId} [${anatomy.desk}]: ${anatomy.note}`);

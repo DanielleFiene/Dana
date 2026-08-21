@@ -16,6 +16,10 @@ describe("Málaga SAIH lead contrast", () => {
     expect(text).toContain("do not referee millimetres");
     expect(text).toContain("77.3");
     expect(text).toContain("3.08");
+    expect(text).toContain("upstream-inflow");
+    expect(text).toContain("not grid-undercatch");
+    expect(text).toContain("one lead on one cell");
+    expect(text).toContain("Valencia / Murcia / Catalonia");
     expect(text).not.toContain("AROME saw it");
   });
 });

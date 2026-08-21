@@ -17,6 +17,8 @@ describe("DANA event replay (historical Open-Meteo)", () => {
     expect(mallorca!.summary.falseAlarms).toEqual(expect.arrayContaining(["pitiusas"]));
     expect(suite.text).toContain("Porto Cristo");
     expect(suite.text).toContain(`still 1 of ${INLAND_AROME_RULE_MIN_CELLS}`);
+    expect(suite.text).toContain("Valencia / Murcia / Catalonia");
+    expect(suite.text).toContain("upstream-inflow");
     expect(suite.text).toContain("2024-10-mallorca/mallorca");
 
     const almeria = suite.reports.find((r) => r.event.id === "2024-11-almeria");

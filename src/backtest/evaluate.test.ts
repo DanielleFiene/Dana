@@ -266,8 +266,44 @@ describe("backtest labels", () => {
       leftoverRainFalseAlarms: ["2024-11-catalunya/ribera-jucar"],
       hitDespiteUndercatch: [],
       leadTimeDry: [],
+      upstreamInflow: [],
       unassignedMisses: [],
       unassignedFalseAlarms: [],
     });
+  });
+
+  it("keeps Cártama off grid-undercatch and records upstream-inflow", () => {
+    expect(deskMechanismFor("2024-11-malaga", "malaga", "hit")).toBe("upstream-inflow");
+    expect(deskMechanismFor("2024-11-malaga", "malaga", "miss")).toBe("upstream-inflow");
+    expect(deskMechanismFor("2024-11-malaga", "malaga", "false-alarm")).toBe("unassigned");
+    expect(deskMechanismFor("2024-10-magre", "utiel-requena", "hit")).toBe("grid-undercatch");
+
+    const hit: BacktestSummary = {
+      hits: ["malaga"],
+      misses: [],
+      falseAlarms: [],
+      okQuiet: [],
+    };
+    expect(tallyDeskMechanisms("2024-11-malaga", hit)).toEqual({
+      gridUndercatchMisses: [],
+      hangoverFalseAlarms: [],
+      leftoverRainFalseAlarms: [],
+      hitDespiteUndercatch: [],
+      leadTimeDry: [],
+      upstreamInflow: ["2024-11-malaga/malaga"],
+      unassignedMisses: [],
+      unassignedFalseAlarms: [],
+    });
+
+    const miss: BacktestSummary = {
+      hits: [],
+      misses: ["malaga"],
+      falseAlarms: [],
+      okQuiet: [],
+    };
+    const missTally = tallyDeskMechanisms("2024-11-malaga", miss);
+    expect(missTally.upstreamInflow).toEqual(["2024-11-malaga/malaga"]);
+    expect(missTally.gridUndercatchMisses).toEqual([]);
+    expect(missTally.unassignedMisses).toEqual([]);
   });
 });

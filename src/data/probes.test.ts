@@ -99,6 +99,8 @@ describe("Cártama Hidrosur probes", () => {
     expect(CARTAMA_SAIH_STAGE.publicSeries).toBe(true);
     expect(CARTAMA_SAIH_STAGE.peakM).toBe(3.08);
     expect(CARTAMA_SAIH_STAGE.peakAtLocal).toBe("2024-11-14 10:00");
+    expect(CARTAMA_SAIH_RAIN.peakHourAtLocal).toBe("2024-11-13 12:00");
+    expect(CARTAMA_SAIH_STAGE.lagFromRainPeakHours).toBe(22);
     expect("peakM3s" in CARTAMA_SAIH_STAGE).toBe(false);
     expect(CARTAMA_SAIH_STAGE.id).not.toBe(MAGRE_POYO_STAGE.id);
 
@@ -114,5 +116,7 @@ describe("Cártama Hidrosur probes", () => {
     expect(text).toContain("Poyo has none");
     expect(text).toContain("not cartama-stage");
     expect(text).toContain("Not CHG");
+    expect(text).toContain("22 h later");
+    expect(text).toContain("not a routing rule");
   });
 });

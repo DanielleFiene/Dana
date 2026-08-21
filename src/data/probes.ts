@@ -165,6 +165,7 @@ export const CARTAMA_SAIH_RAIN = {
   },
   dayMm: 77.3,
   peakHourMm: 19.2,
+  peakHourAtLocal: "2024-11-13 12:00",
 } as const;
 
 /**
@@ -185,6 +186,8 @@ export const CARTAMA_SAIH_STAGE = {
   peakAtLocal: "2024-11-14 10:00",
   day13MaxM: 1.84,
   day13MaxAtLocal: "2024-11-13 18:00",
+  /** Rain peak 12:00 on the 13th → stage peak 10:00 on the 14th. One basin, one event. */
+  lagFromRainPeakHours: 22,
   note: "Public Hidrosur nivel series. Peak the morning after the rain day. Do not file as rain or as CARTAMA_SAIH_FLOW.",
 } as const;
 
@@ -212,7 +215,7 @@ export function formatCartamaObserved(): string {
   return [
     `Hidrosur Cártama ${CARTAMA_SAIH_RAIN.code} rain: ${CARTAMA_SAIH_RAIN.dayMm} mm in ${CARTAMA_SAIH_RAIN.window.hours} h on ${CARTAMA_SAIH_RAIN.window.date} (Europe/Madrid). Peak hour ${CARTAMA_SAIH_RAIN.peakHourMm} mm. This 24 h sum is comparable to a model calendar day. Not CHG. Not AEMET.`,
     `${CARTAMA_SAIH_RAIN.episode.days}-day episode-sum ${CARTAMA_SAIH_RAIN.episode.from}–${CARTAMA_SAIH_RAIN.episode.to} is ${CARTAMA_SAIH_RAIN.episode.mm} mm — almost all the 13th, not a Magre-style 8-day mix. Do not use the episode-sum as the model-day referee.`,
-    `Stage ${CARTAMA_SAIH_STAGE.code} (nivel, public series — Poyo has none): 13 Nov max ${CARTAMA_SAIH_STAGE.day13MaxM} m at ${CARTAMA_SAIH_STAGE.day13MaxAtLocal}; window peak ${CARTAMA_SAIH_STAGE.peakM} m at ${CARTAMA_SAIH_STAGE.peakAtLocal}. Not rain, not caudal.`,
+    `Stage ${CARTAMA_SAIH_STAGE.code} (nivel, public series — Poyo has none): 13 Nov max ${CARTAMA_SAIH_STAGE.day13MaxM} m at ${CARTAMA_SAIH_STAGE.day13MaxAtLocal}; window peak ${CARTAMA_SAIH_STAGE.peakM} m at ${CARTAMA_SAIH_STAGE.peakAtLocal}. Rain peak ${CARTAMA_SAIH_RAIN.peakHourAtLocal} → stage peak ${CARTAMA_SAIH_STAGE.lagFromRainPeakHours} h later. One catchment, one event — not a routing rule. Not rain, not caudal.`,
     `Flow from the same ${CARTAMA_SAIH_FLOW.code} CSV (caudal column, not ${CARTAMA_SAIH_STAGE.id}): 13 Nov max ${CARTAMA_SAIH_FLOW.day13MaxM3s} m³/s; window peak ${CARTAMA_SAIH_FLOW.peakM3s} m³/s at the same ${CARTAMA_SAIH_FLOW.peakAtLocal} hour.`,
   ].join("\n");
 }

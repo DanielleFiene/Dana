@@ -103,6 +103,7 @@ Misses and false alarms are tagged with a **desk mechanism** in `src/data/mechan
 | `hangover` | Leftover cut-off + soil/impact after a big event, little new rain. Thin 0.48 + 0.38 path. | The 22 mm corridor upscale |
 | `leftover-rain` | Calendar day already quiet, but rolling 24/48 h still holds the previous dump. | The thin hangover hinge |
 | `lead-time-dry` | Analysis had rain; previous-run T−24/48/72 did not. | The live formula |
+| `upstream-inflow` | Local rain was not the core; stage/flow arrived from the catchment (Cártama: 77 mm, river peak ~22 h later). | Lowering rain thresholds; calling it `grid-undercatch` |
 
 Labelled days also log **margin to the nearest watch-3 path** (setup+impact 0.48/0.38, severe impact 0.64, corridor upscale 22 mm/24 h or 45 mm/48 h). `thin` means the binding path is within 12 %, not a side limb.
 
@@ -138,7 +139,7 @@ There is no single SAIH API:
 | Hidrosur | Cártama 038R03 nivel | Hourly, public series | 13 Nov max 1.84 m; window peak **3.08 m at 14 Nov 10:00**. First public stage series in the suite (Poyo has none). |
 | Hidrosur | Cártama 038R03 caudal column | Same CSV, not the nivel series | 13 Nov max 210.2 m³/s; window peak **455.59 m³/s at the same 14 Nov 10:00 hour**. |
 
-Local rain at Cártama is not Magre-core. The Guadalhorce still rose, peaking the morning after the rain day.
+Local rain at Cártama is not Magre-core. The Guadalhorce still rose, peaking **~22 h after the rain peak** (12:00 on the 13th → 10:00 on the 14th). That lag is one catchment, one event — not a routing rule until another basin repeats it. Desk mechanism: `upstream-inflow`, not `grid-undercatch`. Mix ~1.8× short of 77 mm is a real millimetre error; the missing input is upstream stage/flow. ECMWF T−72 ~68 mm at the square vs 77 mm SAIH is one lead on one cell — not a rule.
 
 **Magre 2024 observed** is already in `src/data/probes.ts`. Two windows, never mixed, never compared to a single model-run day (`comparableToModelDay: false`):
 
@@ -165,7 +166,7 @@ AROME France (`/v1/meteofrance`, `models=arome_france` explicit) is a **parallel
 
 On Magre it is less wrong on Turís / Chiva / Utiel (best cell ~240 mm vs AEMET Turís ~700–770 mm in 14 h — still ~3× short) and worse on l'Horta. That is a bias profile, not a fix.
 
-`corridorBelt` is a **table label** (`inland-orographic` · `coastal-plain` · `inland-basin` · `island` · `south`). Do not call inland-AROME a rule before a majority across `INLAND_AROME_RULE_MIN_CELLS` (6) independent **inland-orographic** labelled cells. Today that count is 1 of 6 (Utiel–Requena). Mallorca 28 Oct is **island**; Almería 11 Nov is **south** and outside the AROME France domain — labelled, but they do not increment the six. Málaga / Almería / Gibraltar are always out of domain.
+`corridorBelt` is a **table label** (`inland-orographic` · `coastal-plain` · `inland-basin` · `island` · `south`). Do not call inland-AROME a rule before a majority across `INLAND_AROME_RULE_MIN_CELLS` (6) independent **inland-orographic** labelled cells. Today that count is 1 of 6 (Utiel–Requena). Mallorca 28 Oct is **island**. Málaga / Almería / Gibraltar are **south** and always outside the AROME France domain — they will never yield AROME comparison rows, so inland-6 stays on labelled cells in the Valencia / Murcia / Catalonia corridors. Almería 11 Nov and Málaga 13 Nov are labelled; they still do not increment the six.
 
 Murcia Sep 2023 AROME all-null is an Open-Meteo **archive gap**, not an AROME dry-miss and not the inland/coast tally.
 
@@ -202,7 +203,7 @@ GitHub Pages: push, enable Pages from GitHub Actions. `BASE_PATH` follows the re
 
 ## Tests
 
-Unit tests lock the lapse-rate example, dry heat that must not score as a flood, corridor upscale, dual-model cut-off, geofence, sanitisation, Magre observed windows, and desk mechanisms. `npm run test:integration` hits live Open-Meteo. `npm run backtest` is the labelled replay above.
+Unit tests lock the lapse-rate example, dry heat that must not score as a flood, corridor upscale, dual-model cut-off, geofence, sanitisation, Magre observed windows, Cártama SAIH referee, and desk mechanisms (`upstream-inflow` is not `grid-undercatch`). `npm run test:integration` hits live Open-Meteo. `npm run backtest` is the labelled replay above.
 
 ---
 
