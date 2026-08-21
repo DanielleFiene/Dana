@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { copy } from "@/i18n/copy";
 import { fmt, formatDateTime, weekday } from "@/lib/format";
 import { heroStatus, isDryWindow, paintLevel, levelLabel } from "@/scoring/actions";
@@ -120,10 +121,24 @@ export function HourlyBars({
   onSelect: (time: string) => void;
 }) {
   const t = copy[lang];
+  const scroller = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const root = scroller.current;
+    if (!root || !selectedTime) return;
+    const id = requestAnimationFrame(() => {
+      const on = root.querySelector<HTMLElement>(".hour.on");
+      if (!on) return;
+      const next = root.scrollLeft + (on.getBoundingClientRect().left - root.getBoundingClientRect().left);
+      root.scrollTo({ left: Math.max(0, next), behavior: "auto" });
+    });
+    return () => cancelAnimationFrame(id);
+  }, [selectedTime, hours]);
+
   return (
     <div>
       <div className="hero-kicker">{t.hourlyLabel}</div>
-      <div className="hours-scroller">
+      <div className="hours-scroller" ref={scroller}>
         <div className="hours-inner">
           <div className="hours">
             {hours.map((h) => (

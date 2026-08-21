@@ -47,6 +47,7 @@ export function App() {
   const [followPin, setFollowPin] = useState(true);
   const [focusMode, setFocusMode] = useState<"square" | "pin">("square");
   const [focusTick, setFocusTick] = useState(0);
+  const [pin, setPin] = useState<{ lat: number; lon: number } | null>(null);
   const [radarOn, setRadarOn] = useState(false);
   const [saved, setSaved] = useState<SavedPlace[]>(() => loadSavedPlaces());
   const t = copy[lang];
@@ -88,9 +89,7 @@ export function App() {
             setDay(null);
             setHourTime(null);
             setOutside(!inSpainAutoLocate(gps.lat, gps.lon));
-            setFollowPin(true);
-            setFocusMode("pin");
-            setFocusTick((n) => n + 1);
+            aimAt(gps.lat, gps.lon, "pin");
             setLoading(false);
             return;
           } catch {
@@ -105,9 +104,7 @@ export function App() {
             setDay(null);
             setHourTime(null);
             setOutside(false);
-            setFollowPin(true);
-            setFocusMode("pin");
-            setFocusTick((n) => n + 1);
+            aimAt(ip.lat, ip.lon, "pin");
             setLoading(false);
             return;
           } catch {
@@ -120,6 +117,7 @@ export function App() {
         setHourTime(null);
         setFollowPin(true);
         setFocusMode("square");
+        if (valencia) aimAt(valencia.place.lat, valencia.place.lon, "square");
       } catch {
         if (!cancelled) setFailed(true);
       } finally {
@@ -145,12 +143,17 @@ export function App() {
     setHourTime(null);
   }
 
-  async function selectPlace(place: PlaceKey, markOutside = false, mode: "square" | "pin" = "pin") {
-    setOutside(markOutside);
-    resetClock();
+  function aimAt(lat: number, lon: number, mode: "square" | "pin") {
+    setPin({ lat, lon });
     setFollowPin(true);
     setFocusMode(mode);
     setFocusTick((n) => n + 1);
+  }
+
+  async function selectPlace(place: PlaceKey, markOutside = false, mode: "square" | "pin" = "pin") {
+    setOutside(markOutside);
+    resetClock();
+    aimAt(place.lat, place.lon, mode);
     const cached = desk.find((d) => d.place.id === place.id);
     if (cached) {
       setActive(cached);
@@ -171,13 +174,23 @@ export function App() {
   function onHotspot(id: string) {
     const h = hotspotById(id);
     if (!h) return;
-    const cached = desk.find((d) => d.place.id === id);
     setOutside(false);
+    resetClock();
+    setPin({ lat: h.center.lat, lon: h.center.lon });
     setFollowPin(true);
     setFocusMode("square");
     setFocusTick((n) => n + 1);
-    if (cached) setActive(cached);
-    else void selectPlace(placeFromHotspot(h), false, "square");
+    const cached = desk.find((d) => d.place.id === id);
+    if (cached) {
+      setActive(cached);
+      return;
+    }
+    setLoading(true);
+    setFailed(false);
+    void loadOnePlace(placeFromHotspot(h))
+      .then(setActive)
+      .catch(() => setFailed(true))
+      .finally(() => setLoading(false));
   }
 
   function locate() {
@@ -224,8 +237,8 @@ export function App() {
           desk={desk}
           selectedId={active?.place.hotspotId ?? active?.place.id ?? null}
           selectedDate={visibleDay}
-          pinLat={active?.place.lat ?? null}
-          pinLon={active?.place.lon ?? null}
+          pinLat={pin?.lat ?? active?.place.lat ?? null}
+          pinLon={pin?.lon ?? active?.place.lon ?? null}
           followPin={followPin}
           focusMode={focusMode}
           focusTick={focusTick}

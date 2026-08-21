@@ -60,7 +60,7 @@ function chromeOverlay(mapEl: HTMLElement) {
   return inset;
 }
 
-function applyChrome(map: MapLibreMap) {
+function applyChrome(map: MapLibreMap, syncCamera: boolean) {
   const box = map.getContainer();
   const view = { width: box.clientWidth, height: box.clientHeight };
   const inset = cameraPadding(view, chromeOverlay(box));
@@ -71,8 +71,24 @@ function applyChrome(map: MapLibreMap) {
     app.style.setProperty("--overlay-bottom", `${String(Math.round(inset.bottom))}px`);
     app.style.setProperty("--overlay-left", `${String(Math.round(inset.left))}px`);
   }
-  map.setPadding(inset);
+  if (syncCamera) map.setPadding(inset);
   return { view, inset };
+}
+
+function flyToPad(
+  map: MapLibreMap,
+  cam: { center: [number, number]; zoom: number; duration: number; essential: true; offset: readonly [number, number] },
+  inset: ReturnType<typeof applyChrome>["inset"],
+  flying: { current: boolean },
+  flyGen: { current: number },
+) {
+  flying.current = true;
+  const gen = ++flyGen.current;
+  map.stop();
+  map.flyTo({ ...cam, offset: [cam.offset[0], cam.offset[1]], padding: inset });
+  map.once("moveend", () => {
+    if (flyGen.current === gen) flying.current = false;
+  });
 }
 
 export function MapView({
@@ -98,6 +114,8 @@ export function MapView({
   const dateRef = useRef(selectedDate);
   const radarTimer = useRef<number | null>(null);
   const framedByClick = useRef(false);
+  const flying = useRef(false);
+  const flyGen = useRef(0);
   useEffect(() => {
     onSelectRef.current = onSelect;
   }, [onSelect]);
@@ -190,16 +208,15 @@ export function MapView({
     map.on("load", () => {
       paint();
       lockZoomClick();
-      applyChrome(map);
+      applyChrome(map, true);
     });
     const frameSquare = (id: string) => {
       const hotspot = HOTSPOTS.find((h) => h.id === id);
       if (!hotspot) return;
       map.doubleClickZoom.disable();
-      map.stop();
-      const { view, inset } = applyChrome(map);
+      const { view, inset } = applyChrome(map, false);
       const fly = squareCamera(hotspot.polygon, view, inset);
-      if (fly) map.flyTo({ ...fly, padding: inset });
+      if (fly) flyToPad(map, fly, inset, flying, flyGen);
     };
     const pick = (e: MapLayerMouseEvent) => {
       e.preventDefault();
@@ -228,7 +245,7 @@ export function MapView({
     mapRef.current = map;
     const applyLayout = () => {
       map.resize();
-      applyChrome(map);
+      applyChrome(map, !flying.current && !map.isMoving());
     };
     const ro = new ResizeObserver(applyLayout);
     ro.observe(map.getContainer());
@@ -272,16 +289,21 @@ export function MapView({
     const hotspot = selectedId ? HOTSPOTS.find((h) => h.id === selectedId) : undefined;
     const frame = () => {
       map.doubleClickZoom.disable();
-      map.stop();
-      const { view, inset } = applyChrome(map);
+      const { view, inset } = applyChrome(map, false);
       const square =
         focusMode === "square" && hotspot
           ? squareCamera(hotspot.polygon, view, inset)
           : null;
-      map.flyTo({ ...(square ?? pinCamera(pinLon, pinLat)), padding: inset });
+      flyToPad(map, square ?? pinCamera(pinLon, pinLat), inset, flying, flyGen);
     };
-    if (map.isStyleLoaded()) frame();
-    else map.once("load", frame);
+    const start = () => {
+      requestAnimationFrame(() => {
+        if (map.isStyleLoaded()) frame();
+        else map.once("load", frame);
+      });
+    };
+    if (map.isStyleLoaded()) start();
+    else map.once("load", start);
   }, [pinLat, pinLon, followPin, selectedId, focusTick, focusMode]);
 
   useEffect(() => {
