@@ -533,7 +533,24 @@ button:focus-visible, a:focus-visible, input:focus-visible {
   background: rgba(255, 255, 255, 0.03);
 }
 .method summary { cursor: pointer; font-weight: 600; }
-.method p { color: var(--muted); font-size: 0.9rem; line-height: 1.5; }
+.method-body {
+  margin-top: 8px;
+  max-height: min(40vh, 22rem);
+  overflow: auto;
+  padding-right: 4px;
+}
+.method-lead {
+  color: var(--text, #ececec);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+.method h3 {
+  margin: 14px 0 4px;
+  font-size: 0.8rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+}
+.method p { color: var(--muted); font-size: 0.86rem; line-height: 1.5; margin: 0 0 8px; }
 
 @media (max-width: 960px) {
   .chrome-official { display: none; }
