@@ -49,8 +49,15 @@ export const MAGRE_SAIH_EPISODE = {
   },
 } as const;
 
+/**
+ * Physical quantity at a SAIH station. Rain, stage (nivel, m) and flow
+ * (caudal, m³/s) are not interchangeable. "We have Poyo data" is not a kind.
+ */
+export type SaihQuantity = "rain" | "stage" | "flow";
+
 export type MagreSaihRainProbe = {
   id: "chiva" | "real" | "forata" | "requena" | "poyo-rain";
+  quantity: "rain";
   name: string;
   code: string;
   mm: number;
@@ -63,27 +70,152 @@ export type MagreSaihRainProbe = {
  * window next to `mm` so a later day-vs-gauge compare cannot miss it.
  */
 export const MAGRE_SAIH_RAIN: readonly MagreSaihRainProbe[] = [
-  { id: "chiva", name: "Chiva", code: "0P09", mm: 621, coord: SAIH_CHIVA, window: MAGRE_SAIH_EPISODE.window },
-  { id: "real", name: "Marco en Real", code: "7O09", mm: 545.3, coord: SAIH_REAL, window: MAGRE_SAIH_EPISODE.window },
-  { id: "forata", name: "Embalse de Forata", code: "7E03", mm: 320, coord: SAIH_FORATA, window: MAGRE_SAIH_EPISODE.window },
-  { id: "requena", name: "EA 60 Requena", code: "5A02", mm: 273.4, coord: SAIH_REQUENA, window: MAGRE_SAIH_EPISODE.window },
-  { id: "poyo-rain", name: "Marco rambla del Poyo N-III", code: "0O04", mm: 240.2, coord: SAIH_POYO_N3, window: MAGRE_SAIH_EPISODE.window },
+  { id: "chiva", quantity: "rain", name: "Chiva", code: "0P09", mm: 621, coord: SAIH_CHIVA, window: MAGRE_SAIH_EPISODE.window },
+  { id: "real", quantity: "rain", name: "Marco en Real", code: "7O09", mm: 545.3, coord: SAIH_REAL, window: MAGRE_SAIH_EPISODE.window },
+  { id: "forata", quantity: "rain", name: "Embalse de Forata", code: "7E03", mm: 320, coord: SAIH_FORATA, window: MAGRE_SAIH_EPISODE.window },
+  { id: "requena", quantity: "rain", name: "EA 60 Requena", code: "5A02", mm: 273.4, coord: SAIH_REQUENA, window: MAGRE_SAIH_EPISODE.window },
+  { id: "poyo-rain", quantity: "rain", name: "Marco rambla del Poyo N-III", code: "0O04", mm: 240.2, coord: SAIH_POYO_N3, window: MAGRE_SAIH_EPISODE.window },
 ];
 
 /**
- * Poyo stage, not rain. Last good values before the sensor was lost in the
- * flood — the hydrograph is truncated, so there is no complete SAIH time
- * series for this gauge. Do not treat as an undercatch millimetre.
+ * Poyo stage (nivel), not rain and not caudal. Last good water level in the
+ * Magre episode report before the sensor was lost. Truncated hydrograph.
+ * There is no public CHJ nivel series to harvest — mapa-aforos fldTNivel is null.
  */
 export const MAGRE_POYO_STAGE = {
+  id: "poyo-stage",
+  quantity: "stage",
+  unit: "m",
   name: "Rambla del Poyo N-III",
   code: "0O04",
   coord: SAIH_POYO_N3,
   lostAtLocal: "2024-10-29 18:55",
   lastLevelM: 4.899,
-  lastFlowM3s: 2282.9,
-  note: "Last values before the sensor was lost. Incomplete hydrograph, not a rain total.",
+  publicSeries: false,
+  note: "Nivel snapshot from the Magre episode report. Incomplete hydrograph, not rain, not the live 13873 caudal series.",
 } as const;
+
+/**
+ * Last caudal printed in the Magre episode report at the same clock as the
+ * stage snapshot. Not a flow time series, not variable 13873, not stage.
+ */
+export const MAGRE_POYO_FLOW_AT_LOSS = {
+  id: "poyo-flow-at-loss",
+  quantity: "flow",
+  unit: "m³/s",
+  name: "Rambla del Poyo N-III",
+  code: "0O04",
+  coord: SAIH_POYO_N3,
+  lostAtLocal: MAGRE_POYO_STAGE.lostAtLocal,
+  lastFlowM3s: 2282.9,
+  publicSeries: false,
+  sameInstantAs: MAGRE_POYO_STAGE.id,
+  note: "Caudal snapshot from the Magre episode report at sensor loss. Do not file as MAGRE_POYO_STAGE or as POYO_N3_CAUDAL.",
+} as const;
+
+/**
+ * Live public CHJ aforo at Poyo N-III. Confirmed on mapa-aforos 2026-08-21:
+ * variable 13873, CAUDAL RAMBLA DE POYO, m³/s. Not nivel.
+ * A later event's peak flow can proxy the collapse time without a stage series.
+ * Do not store or cite this under a MAGRE_POYO_STAGE-shaped label.
+ */
+export const POYO_N3_CAUDAL = {
+  id: "poyo-flow",
+  quantity: "flow",
+  unit: "m³/s",
+  name: "MC RAMBLA POYO N-III",
+  code: "0O04",
+  stationId: "227",
+  variableId: "13873",
+  coord: SAIH_POYO_N3,
+  publicSeries: true,
+  note: "Live CHJ caudal archive (saih:chj). Not stage. fldTNivel is null on the public ficha.",
+} as const;
+
+/** Guadalhorce at Cártama town — west of the Málaga desk-square centre. */
+export const SAIH_CARTAMA: Coord = { lat: 36.737, lon: -4.632 };
+
+/**
+ * Hidrosur Cártama pluvio. 24 h Europe/Madrid on the labelled 13 Nov day
+ * *is* comparable to a model calendar day. The 5-day 11–15 Nov sum is not.
+ * Not CHG.
+ */
+export const CARTAMA_SAIH_RAIN = {
+  id: "cartama-rain",
+  quantity: "rain" as const,
+  source: "hidrosur",
+  name: "Río Guadalhorce (Cártama)",
+  code: "038P01",
+  coord: SAIH_CARTAMA,
+  window: {
+    kind: "hourly-day" as const,
+    hours: 24,
+    date: "2024-11-13",
+    timezone: "Europe/Madrid",
+    comparableToModelDay: true,
+  },
+  episode: {
+    kind: "episode-sum" as const,
+    days: 5,
+    from: "2024-11-11 00:00",
+    to: "2024-11-15 23:59",
+    timezone: "Europe/Madrid",
+    comparableToModelDay: false,
+    mm: 84.5,
+  },
+  dayMm: 77.3,
+  peakHourMm: 19.2,
+} as const;
+
+/**
+ * First public stage series in the suite. Hidrosur 038R03 nivel column.
+ * Unlike MAGRE_POYO_STAGE (snapshot, no public CHJ series).
+ * Window peak is 14 Nov, the morning after the rain day — not rain, not caudal.
+ */
+export const CARTAMA_SAIH_STAGE = {
+  id: "cartama-stage",
+  quantity: "stage" as const,
+  unit: "m",
+  source: "hidrosur",
+  name: "Río Guadalhorce (Cártama)",
+  code: "038R03",
+  coord: SAIH_CARTAMA,
+  publicSeries: true,
+  peakM: 3.08,
+  peakAtLocal: "2024-11-14 10:00",
+  day13MaxM: 1.84,
+  day13MaxAtLocal: "2024-11-13 18:00",
+  note: "Public Hidrosur nivel series. Peak the morning after the rain day. Do not file as rain or as CARTAMA_SAIH_FLOW.",
+} as const;
+
+/**
+ * Caudal column on the same 038R03 CSV as CARTAMA_SAIH_STAGE. Not stage.
+ */
+export const CARTAMA_SAIH_FLOW = {
+  id: "cartama-flow",
+  quantity: "flow" as const,
+  unit: "m³/s",
+  source: "hidrosur",
+  name: "Río Guadalhorce (Cártama)",
+  code: "038R03",
+  coord: SAIH_CARTAMA,
+  publicSeries: true,
+  peakM3s: 455.59,
+  peakAtLocal: CARTAMA_SAIH_STAGE.peakAtLocal,
+  day13MaxM3s: 210.2,
+  day13MaxAtLocal: CARTAMA_SAIH_STAGE.day13MaxAtLocal,
+  sameCsvAs: CARTAMA_SAIH_STAGE.id,
+  note: "Caudal from the 038R03 CSV, not the nivel column. Do not file as CARTAMA_SAIH_STAGE.",
+} as const;
+
+export function formatCartamaObserved(): string {
+  return [
+    `Hidrosur Cártama ${CARTAMA_SAIH_RAIN.code} rain: ${CARTAMA_SAIH_RAIN.dayMm} mm in ${CARTAMA_SAIH_RAIN.window.hours} h on ${CARTAMA_SAIH_RAIN.window.date} (Europe/Madrid). Peak hour ${CARTAMA_SAIH_RAIN.peakHourMm} mm. This 24 h sum is comparable to a model calendar day. Not CHG. Not AEMET.`,
+    `${CARTAMA_SAIH_RAIN.episode.days}-day episode-sum ${CARTAMA_SAIH_RAIN.episode.from}–${CARTAMA_SAIH_RAIN.episode.to} is ${CARTAMA_SAIH_RAIN.episode.mm} mm — almost all the 13th, not a Magre-style 8-day mix. Do not use the episode-sum as the model-day referee.`,
+    `Stage ${CARTAMA_SAIH_STAGE.code} (nivel, public series — Poyo has none): 13 Nov max ${CARTAMA_SAIH_STAGE.day13MaxM} m at ${CARTAMA_SAIH_STAGE.day13MaxAtLocal}; window peak ${CARTAMA_SAIH_STAGE.peakM} m at ${CARTAMA_SAIH_STAGE.peakAtLocal}. Not rain, not caudal.`,
+    `Flow from the same ${CARTAMA_SAIH_FLOW.code} CSV (caudal column, not ${CARTAMA_SAIH_STAGE.id}): 13 Nov max ${CARTAMA_SAIH_FLOW.day13MaxM3s} m³/s; window peak ${CARTAMA_SAIH_FLOW.peakM3s} m³/s at the same ${CARTAMA_SAIH_FLOW.peakAtLocal} hour.`,
+  ].join("\n");
+}
 
 export function formatMagreObserved(): string {
   const rain = MAGRE_SAIH_RAIN.map(
@@ -93,6 +225,7 @@ export function formatMagreObserved(): string {
     `AEMET Turís ~${MAGRE_CORE_OBSERVED.dayMm.from}–${MAGRE_CORE_OBSERVED.dayMm.to} mm in ${MAGRE_CORE_OBSERVED.window.hours} h on ${MAGRE_CORE_OBSERVED.window.date}, peak hour ~${MAGRE_CORE_OBSERVED.peakHourMm} mm. Not SAIH. Not a 24 h model day.`,
     `CHJ SAIH ${MAGRE_SAIH_EPISODE.window.days}-day episode-sum ${MAGRE_SAIH_EPISODE.window.from}–${MAGRE_SAIH_EPISODE.window.to} (${MAGRE_SAIH_EPISODE.report}). Not 29 Oct calendar-day totals. Do not compare to a single model-run day.`,
     ...rain,
-    `Poyo N-III stage (not rain): last ${MAGRE_POYO_STAGE.lastLevelM} m / ${MAGRE_POYO_STAGE.lastFlowM3s} m³/s at ${MAGRE_POYO_STAGE.lostAtLocal}, sensor lost before the peak.`,
+    `Poyo N-III stage (nivel, not rain, not caudal): last ${MAGRE_POYO_STAGE.lastLevelM} m at ${MAGRE_POYO_STAGE.lostAtLocal}, sensor lost before the peak. No public CHJ nivel series.`,
+    `Poyo N-III flow at loss (caudal snapshot from the episode report, not live variable ${POYO_N3_CAUDAL.variableId}): last ${MAGRE_POYO_FLOW_AT_LOSS.lastFlowM3s} m³/s at the same instant.`,
   ].join("\n");
 }

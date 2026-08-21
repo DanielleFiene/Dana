@@ -122,10 +122,23 @@ There is no single SAIH API:
 | CHS | Segura | Live JSON / ArcGIS snapshot. History behind auth. |
 | ACA | Catalan coast | Documented Sentilo REST. Rolling window; 4 Nov 2024 empty. Tarragona square is ACA coast + CHE Ebro. |
 | CHE | Ebro | Separate from ACA. |
-| Hidrosur | Málaga / Almería / Gibraltar | Junta de Andalucía, **not** CHG. CHG is Guadalquivir (Atlantic). POST + CSV; 13 Nov 2024 Cártama hourly CSV works. |
+| Hidrosur | Málaga / Almería / Campo de Gibraltar | Junta de Andalucía, **not** CHG. Undocumented POST+CSV (`ci_session`). Cártama `038P01` rain and `038R03` nivel/caudal for 11–15 Nov 2024 are on disk as one-shot fixtures. |
 | Balears | Mallorca / Pitiusas | No confederación SAIH. |
 
-A live CHJ harvester is next (damage-prevention for the *next* event). It cannot recover Magre 2024 from the public JSON.
+`npm run saih:chj` archives the Magre-corridor CHJ stations (Turís 7R04, Chiva 0P09, Utiel 0N01, Poyo N-III 0O04 rain + caudal) into `data/saih/chj/` as JSONL. Each run looks back 72 h so a missed pull still overlaps. It cannot recover Magre 2024 from the public JSON. Not wired into the live score. Cron: `*/2` hours, or `npm run saih:chj -- --loop`.
+
+`npm run saih:hidrosur` is a **one-shot** historical pull, not a cron: Cártama `038P01` hourly rain and `038R03` nivel (plus the caudal column on that same CSV) for 11–15 Nov 2024 into `src/saih/hidrosur/fixtures/`. Same `{fecha, valor, estado}` rows as CHJ. Rain, stage and flow stay on three labels. Not a live score input. Other Hidrosur IDs stay unfetched until they reappear on the 177-station form.
+
+**Málaga 13 Nov 2024 — first SAIH model-day referee.** Hidrosur Cártama rain on 13 Nov (24 h Europe/Madrid) *is* comparable to a model calendar day. The 5-day 11–15 Nov sum is not. AROME is out of domain on this square. Stage/flow do not referee millimetres.
+
+| Source | Station | Window | Figure |
+|---|---|---|---|
+| Hidrosur | Cártama 038P01 rain | **24 h on 13 Nov 2024** (Europe/Madrid) | 77.3 mm; peak hour 19.2 mm. Comparable to a model day. |
+| Hidrosur | Cártama 038P01 rain | Episode-sum **11–15 Nov** | 84.5 mm — almost all the 13th. Not the model-day referee. |
+| Hidrosur | Cártama 038R03 nivel | Hourly, public series | 13 Nov max 1.84 m; window peak **3.08 m at 14 Nov 10:00**. First public stage series in the suite (Poyo has none). |
+| Hidrosur | Cártama 038R03 caudal column | Same CSV, not the nivel series | 13 Nov max 210.2 m³/s; window peak **455.59 m³/s at the same 14 Nov 10:00 hour**. |
+
+Local rain at Cártama is not Magre-core. The Guadalhorce still rose, peaking the morning after the rain day.
 
 **Magre 2024 observed** is already in `src/data/probes.ts`. Two windows, never mixed, never compared to a single model-run day (`comparableToModelDay: false`):
 
@@ -140,7 +153,7 @@ A live CHJ harvester is next (damage-prevention for the *next* event). It cannot
 
 Report: CHJ `20241029-1104Informe-Episodio-C-version2.pdf`. SAIH millimetres include wet hours around the Magre peak; they are **not** 29 Oct calendar-day totals.
 
-**Poyo N-III stage is not rain.** Last good values 4.899 m / 2282.9 m³/s at 29 Oct 2024 18:55, then the sensor was lost. Incomplete hydrograph — not an undercatch millimetre.
+**Poyo N-III hydro is three labels, not one “Poyo datum”.** Magre `MAGRE_POYO_STAGE` is **nivel** (4.899 m at 18:55, then the sensor was lost) — incomplete, not on the public API (`fldTNivel` is null). The same clock in the episode report also printed **caudal** 2282.9 m³/s as `MAGRE_POYO_FLOW_AT_LOSS` (snapshot, not a series). Live archive `POYO_N3_CAUDAL` is CHJ variable **13873** (m³/s). A later event’s peak flow can proxy collapse time without a stage series. Do not file caudal under a STAGE-shaped name.
 
 700–770 mm (Turís) and the SAIH episode table are enough to talk about **grid undercatch**. They are not an ENS calibration set and not a reason to put a chance % on the desk.
 
@@ -167,6 +180,7 @@ An AROME-only false alarm is `hangover` or `leftover-rain` (or `unassigned`) —
 - Geocoding limited to Spain.
 - Map: OpenStreetMap / CARTO. Live rain overlay: RainViewer (tiles to zoom 7).
 - Magre observed: AEMET Turís (peak-hours) and CHJ SAIH episode table as above.
+- Málaga 13 Nov 2024 observed: Hidrosur Cártama `038P01` rain and `038R03` nivel/caudal fixtures (not CHG). 13 Nov rain is a model-day referee; stage peaks 14 Nov.
 
 ---
 
@@ -176,9 +190,11 @@ An AROME-only false alarm is `hangover` or `leftover-rain` (or `unassigned`) —
 npm ci
 npm test
 npm run dev
+npm run saih:chj
+npm run saih:hidrosur
 ```
 
-http://localhost:5173 — Node 20+.
+http://localhost:5173 — Node 22+ (see `.nvmrc`). `npm run saih:chj` is one CHJ pull; add `-- --loop` to repeat every 2 hours. `npm run saih:hidrosur` re-fetches the Cártama Nov 2024 fixture.
 
 GitHub Pages: push, enable Pages from GitHub Actions. `BASE_PATH` follows the repo name. Workflow: `.github/workflows/ci.yml`.
 
@@ -192,4 +208,4 @@ Unit tests lock the lapse-rate example, dry heat that must not score as a flood,
 
 ## Attribution
 
-Weather: [Open-Meteo](https://open-meteo.com/). Map: OpenStreetMap contributors and CARTO. Radar: RainViewer. Magre SAIH episode table: Confederación Hidrográfica del Júcar.
+Weather: [Open-Meteo](https://open-meteo.com/). Map: OpenStreetMap contributors and CARTO. Radar: RainViewer. Magre SAIH episode table: Confederación Hidrográfica del Júcar. Cártama rain and Guadalhorce stage: SAIH Hidrosur (Junta de Andalucía).

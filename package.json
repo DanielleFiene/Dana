@@ -14,7 +14,9 @@
     "test:watch": "vitest",
     "test:integration": "vitest run --config vitest.integration.config.ts",
     "backtest": "vitest run --config vitest.backtest.config.ts",
-    "test:all": "vitest run && vitest run --config vitest.integration.config.ts"
+    "test:all": "vitest run && vitest run --config vitest.integration.config.ts",
+    "saih:chj": "node --experimental-strip-types src/saih/chj/run.ts",
+    "saih:hidrosur": "node --experimental-strip-types src/saih/hidrosur/run.ts"
   },
   "engines": {
     "node": ">=20"

@@ -1,0 +1,25 @@
+{
+  "id": "cartama-rain",
+  "network": "hidrosur",
+  "not": "CHG",
+  "quantity": "rain",
+  "unit": "mm",
+  "kind": "rain-hourly",
+  "csvColumn": null,
+  "stationId": "38",
+  "sensorId": "038P01",
+  "stationName": "RÍO GUADALHORCE (CÁRTAMA) (MA)",
+  "window": {
+    "kind": "labelled-event",
+    "from": "11/11/2024 00:00",
+    "to": "15/11/2024 23:59",
+    "timezone": "Europe/Madrid",
+    "eventId": "2024-11-malaga",
+    "comparableToModelDay": false
+  },
+  "fetchedAt": "2026-08-21T10:52:38.966Z",
+  "points": 120,
+  "sumMm": 84.5,
+  "stationCountOnForm": 177,
+  "note": "One-shot historical CSV. Not a live harvest. Not wired into the desk score."
+}

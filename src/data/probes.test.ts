@@ -1,11 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
+  CARTAMA_SAIH_FLOW,
+  CARTAMA_SAIH_RAIN,
+  CARTAMA_SAIH_STAGE,
+  formatCartamaObserved,
   formatMagreObserved,
   MAGRE_CORE_OBSERVED,
+  MAGRE_POYO_FLOW_AT_LOSS,
   MAGRE_POYO_STAGE,
   MAGRE_SAIH_EPISODE,
   MAGRE_SAIH_RAIN,
+  POYO_N3_CAUDAL,
 } from "@/data/probes";
+import { WANTED_FLOW } from "@/saih/chj/catalog";
 
 describe("Magre SAIH episode probes", () => {
   it("keeps AEMET Turís as the core 14 h figure, not SAIH", () => {
@@ -29,24 +36,83 @@ describe("Magre SAIH episode probes", () => {
       expect(row.window).toBe(MAGRE_SAIH_EPISODE.window);
       expect(row.window.days).toBe(8);
       expect(row.window.kind).toBe("episode-sum");
+      expect(row.quantity).toBe("rain");
     }
   });
 
-  it("records Poyo stage as a truncated hydrograph, not rain", () => {
-    expect(MAGRE_POYO_STAGE.lostAtLocal).toBe("2024-10-29 18:55");
+  it("records Poyo stage as nivel only, and keeps caudal on a different label", () => {
+    expect(MAGRE_POYO_STAGE.id).toBe("poyo-stage");
+    expect(MAGRE_POYO_STAGE.quantity).toBe("stage");
+    expect(MAGRE_POYO_STAGE.unit).toBe("m");
     expect(MAGRE_POYO_STAGE.lastLevelM).toBe(4.899);
-    expect(MAGRE_POYO_STAGE.lastFlowM3s).toBe(2282.9);
+    expect(MAGRE_POYO_STAGE.publicSeries).toBe(false);
+    expect("lastFlowM3s" in MAGRE_POYO_STAGE).toBe(false);
+
+    expect(MAGRE_POYO_FLOW_AT_LOSS.id).toBe("poyo-flow-at-loss");
+    expect(MAGRE_POYO_FLOW_AT_LOSS.quantity).toBe("flow");
+    expect(MAGRE_POYO_FLOW_AT_LOSS.unit).toBe("m³/s");
+    expect(MAGRE_POYO_FLOW_AT_LOSS.lastFlowM3s).toBe(2282.9);
+    expect(MAGRE_POYO_FLOW_AT_LOSS.lostAtLocal).toBe(MAGRE_POYO_STAGE.lostAtLocal);
+    expect(MAGRE_POYO_FLOW_AT_LOSS.sameInstantAs).toBe(MAGRE_POYO_STAGE.id);
+    expect(MAGRE_POYO_FLOW_AT_LOSS.id).not.toBe(MAGRE_POYO_STAGE.id);
+
+    expect(POYO_N3_CAUDAL.id).toBe("poyo-flow");
+    expect(POYO_N3_CAUDAL.quantity).toBe("flow");
+    expect(POYO_N3_CAUDAL.variableId).toBe("13873");
+    expect(POYO_N3_CAUDAL.publicSeries).toBe(true);
+    expect(POYO_N3_CAUDAL.id).not.toBe(MAGRE_POYO_STAGE.id);
+    expect(POYO_N3_CAUDAL.quantity).not.toBe(MAGRE_POYO_STAGE.quantity);
+
+    expect(WANTED_FLOW[0]?.id).toBe(POYO_N3_CAUDAL.id);
+    expect(WANTED_FLOW[0]?.quantity).toBe(POYO_N3_CAUDAL.quantity);
+    expect(WANTED_FLOW[0]?.fallbackVariableId).toBe(POYO_N3_CAUDAL.variableId);
+
     const text = formatMagreObserved();
     expect(text).toContain("621.0");
     expect(text).toContain("545.3");
     expect(text).toContain("320.0");
     expect(text).toContain("273.4");
     expect(text).toContain("240.2");
-    expect(text).toContain("not rain");
+    expect(text).toContain("nivel, not rain, not caudal");
     expect(text).toContain("18:55");
     expect(text).toContain("sensor lost before the peak");
+    expect(text).toContain("No public CHJ nivel series");
+    expect(text).toContain("not live variable 13873");
+    expect(text).toContain("2282.9");
     expect(text).toContain("Not 29 Oct calendar-day totals");
     expect(text).toContain("8-day episode-sum");
     expect(text).toContain("Do not compare to a single model-run day");
+  });
+});
+
+describe("Cártama Hidrosur probes", () => {
+  it("keeps rain, stage and flow on three labels, and 13 Nov rain as a model-day referee", () => {
+    expect(CARTAMA_SAIH_RAIN.quantity).toBe("rain");
+    expect(CARTAMA_SAIH_RAIN.window.comparableToModelDay).toBe(true);
+    expect(CARTAMA_SAIH_RAIN.episode.comparableToModelDay).toBe(false);
+    expect(CARTAMA_SAIH_RAIN.dayMm).toBe(77.3);
+    expect(CARTAMA_SAIH_RAIN.peakHourMm).toBe(19.2);
+    expect(CARTAMA_SAIH_RAIN.episode.mm).toBe(84.5);
+
+    expect(CARTAMA_SAIH_STAGE.id).toBe("cartama-stage");
+    expect(CARTAMA_SAIH_STAGE.quantity).toBe("stage");
+    expect(CARTAMA_SAIH_STAGE.publicSeries).toBe(true);
+    expect(CARTAMA_SAIH_STAGE.peakM).toBe(3.08);
+    expect(CARTAMA_SAIH_STAGE.peakAtLocal).toBe("2024-11-14 10:00");
+    expect("peakM3s" in CARTAMA_SAIH_STAGE).toBe(false);
+    expect(CARTAMA_SAIH_STAGE.id).not.toBe(MAGRE_POYO_STAGE.id);
+
+    expect(CARTAMA_SAIH_FLOW.quantity).toBe("flow");
+    expect(CARTAMA_SAIH_FLOW.sameCsvAs).toBe(CARTAMA_SAIH_STAGE.id);
+    expect(CARTAMA_SAIH_FLOW.id).not.toBe(CARTAMA_SAIH_STAGE.id);
+    expect(CARTAMA_SAIH_FLOW.peakAtLocal).toBe(CARTAMA_SAIH_STAGE.peakAtLocal);
+
+    const text = formatCartamaObserved();
+    expect(text).toContain("comparable to a model calendar day");
+    expect(text).toContain("038P01");
+    expect(text).toContain("038R03");
+    expect(text).toContain("Poyo has none");
+    expect(text).toContain("not cartama-stage");
+    expect(text).toContain("Not CHG");
   });
 });

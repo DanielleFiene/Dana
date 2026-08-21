@@ -185,11 +185,23 @@ function sumOnDate(times: string[], values: Array<number | null>, date: string):
   return any ? sum : null;
 }
 
+const EMPTY_LEAD: LeadPrecip = {
+  analysisMm: null,
+  lead24Mm: null,
+  lead48Mm: null,
+  lead72Mm: null,
+};
+
+function leadPayloadHasHourly(raw: unknown): raw is { hourly: unknown } {
+  return Boolean(raw && typeof raw === "object" && "hourly" in raw && (raw as { hourly: unknown }).hourly);
+}
+
 /**
  * Model rain at fixed lead times (Open-Meteo previous-runs).
  * Pressure-level DANA fields are not archived with this suffix, so this is
  * rain-only: would the millimetres have been enough, not the full score.
- * Null = that lead is empty (AROME's 2-day horizon has no T−48/T−72).
+ * Null = that lead is empty (AROME's 2-day horizon has no T−48/T−72;
+ * out-of-domain AROME previous-runs omit `hourly` entirely).
  */
 export async function fetchLeadPrecip(
   point: Coord,
@@ -205,6 +217,7 @@ export async function fetchLeadPrecip(
   url.searchParams.set("timezone", "Europe/Madrid");
   if (models) url.searchParams.set("models", models);
   const raw = await getJson(url, HIST_TIMEOUT_MS);
+  if (!leadPayloadHasHourly(raw)) return EMPTY_LEAD;
   const parsed = leadSchema.parse(raw);
   const t = parsed.hourly.time;
   const h = parsed.hourly;

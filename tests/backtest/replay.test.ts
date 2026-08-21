@@ -77,7 +77,12 @@ describe("DANA event replay (historical Open-Meteo)", () => {
     expect(suite.text).toContain("sensor lost before the peak");
     expect(suite.text).toContain("leftover-rain");
     expect(suite.text).toContain("ECMWF IFS ENS");
-    expect(suite.text).not.toContain("AROME saw it");
+    expect(suite.text).toContain("Cártama SAIH");
+    expect(suite.text).toContain("77.3");
+    expect(suite.text).toContain("038R03");
+    expect(suite.text).toContain("comparable to a model calendar day");
+    expect(suite.text).toContain("3.08");
+    expect(suite.text).toContain("out of domain on this square");
     const utiel31 = suite.aromeDeltas.find(
       (d) => d.eventId === "2024-10-magre-aftermath" && d.hotspotId === "utiel-requena" && d.date === "2024-10-31",
     );

@@ -1,0 +1,25 @@
+{
+  "id": "cartama-flow",
+  "network": "hidrosur",
+  "not": "CHG",
+  "quantity": "flow",
+  "unit": "m³/s",
+  "kind": "flow-hourly",
+  "csvColumn": "Caudal (m3/s)",
+  "stationId": "38",
+  "sensorId": "038R03",
+  "stationName": "RÍO GUADALHORCE (CÁRTAMA) (MA)",
+  "window": {
+    "kind": "labelled-event",
+    "from": "11/11/2024 00:00",
+    "to": "15/11/2024 23:59",
+    "timezone": "Europe/Madrid",
+    "eventId": "2024-11-malaga",
+    "comparableToModelDay": false
+  },
+  "fetchedAt": "2026-08-21T10:52:38.966Z",
+  "points": 120,
+  "maxM3s": 455.59,
+  "stationCountOnForm": 177,
+  "note": "One-shot historical CSV. Not a live harvest. Not wired into the desk score."
+}

@@ -25,7 +25,14 @@ import {
 } from "@/backtest/evaluate";
 import { hingeMargin } from "@/backtest/margin";
 import { compareAromeToMix, formatAromeCompare, formatMagreSpatial, type AromeDelta } from "@/backtest/arome";
-import { fetchMagreLeadContrast, formatMagreLeadContrast, fetchMallorcaLeadContrast, formatMallorcaLeadContrast } from "@/backtest/leads";
+import {
+  fetchMagreLeadContrast,
+  formatMagreLeadContrast,
+  fetchMallorcaLeadContrast,
+  formatMallorcaLeadContrast,
+  fetchMalagaLeadContrast,
+  formatMalagaSaihContrast,
+} from "@/backtest/leads";
 import { DANA_EVENTS, labelledDates, type DanaEvent } from "@/data/events";
 import { type RainSource } from "@/data/mechanisms";
 import { aromeCovers, HOTSPOTS, INLAND_AROME_RULE_MIN_CELLS } from "@/data/hotspots";
@@ -201,6 +208,12 @@ export async function runDanaSuite(events: readonly DanaEvent[] = DANA_EVENTS): 
     const contrast = await fetchMagreLeadContrast(magre.event.peakDate);
     text = `${text}\n\n${formatMagreLeadContrast(contrast)}`;
     if (magreArome) text = `${text}\n\n${formatMagreSpatial(magre.rows, magreArome.rows)}`;
+  }
+
+  const malaga = reports.find((r) => r.event.id === "2024-11-malaga");
+  if (malaga) {
+    const contrast = await fetchMalagaLeadContrast(malaga.event.peakDate);
+    text = `${text}\n\n${formatMalagaSaihContrast(contrast)}`;
   }
 
   try {
